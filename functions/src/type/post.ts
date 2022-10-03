@@ -1,17 +1,15 @@
-import {User} from "./user";
-
 /**
  * Contains all fields for a Post.
  */
 
 export type Post = {
   id: string;
-  poster: User
-  startDateTime: Date;
-  endDateTime: Date;
+  posterId: string
+  startDateTime: string;
+  endDateTime: string;
   personCapacity: number;
   /** List of users who have been confirmed to be going for the post event */
-  currPersons: User[];
+  participants: string[];
   location: PostLocation;
 }
 
