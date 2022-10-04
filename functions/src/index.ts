@@ -7,6 +7,7 @@ import * as posts from "./posts";
 export const createUser = users.createUser;
 export const getUser = users.getUser;
 export const getCurrentUser = users.getCurrentUser;
+export const hasCreatedUserProfile = users.hasCreatedUserProfile;
 
 
 // Posts
