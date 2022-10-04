@@ -1,6 +1,5 @@
 import * as admin from "firebase-admin";
-import {User} from "./type/user";
-import {Post} from "./type/post";
+import {FirestoreCustomPost, FirestoreCustomUser} from "./type/firebase-type";
 
 
 admin.initializeApp();
@@ -21,8 +20,8 @@ const dataPoint = <T>(collectionPath: string) => firestore
 
 const db = {
   // list your collections here
-  users: dataPoint<User>("users"),
-  posts: dataPoint<Post>("posts"),
+  users: dataPoint<FirestoreCustomUser>("users"),
+  posts: dataPoint<FirestoreCustomPost>("posts"),
 };
 
 export {admin, db};

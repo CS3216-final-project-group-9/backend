@@ -2,18 +2,21 @@
  * Contains all fields for a Post.
  */
 
+import {User} from "./user";
+
 export type Post = {
   id: string;
-  posterId: string
+  poster: User
   startDateTime: string;
   endDateTime: string;
   personCapacity: number;
   /** List of users who have been confirmed to be going for the post event */
-  participants: string[];
+  participants: User[];
   location: PostLocation;
 }
 
-enum PostLocation {
+
+export enum PostLocation {
   CLB,
   UTOWN,
   SCIENCE,
