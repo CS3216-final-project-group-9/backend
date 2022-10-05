@@ -1,15 +1,90 @@
 import * as functions from "firebase-functions";
+import {db} from "../firebase";
+import {FirestoreCustomParticipant} from "../type/firebase-type";
+import {AppliedRequestStatus} from "../type/postApplication";
 
-export const createPostApplication = functions.https.onCall((data, context) => {
-  // ...
-  
-});
+export const createPostApplication = functions.https.onCall(
+    async (data, context) => {
+      try {
+        const uid = context.auth?.uid;
+        if (!uid) {
+          throw new functions.https
+              .HttpsError("unauthenticated", "User ID cannot be determined");
+        }
 
-export const deletePostApplication = functions.https.onCall((data, context) => {
-  // ...
-});
+        const {postId: postIdRaw} = data;
+        const postId = postIdRaw? postIdRaw as string : null;
+        if (!postId) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Cannot find post Id");
+        }
+        const newApplication: FirestoreCustomParticipant = {
+          userId: uid,
+          status: AppliedRequestStatus.PENDING,
+        };
+        await db.postParticipants(postId).doc(uid).set(newApplication);
 
-export const responsePostApplication = functions
-    .https.onCall((data, context) => {
-      // ...
+        return {success: true, message: "Applied to post successfully"};
+      } catch (e) {
+        return {success: false, message: String(e)};
+      }
+    }
+);
+
+export const deletePostApplication = functions.https.onCall(
+    async (data, context) => {
+      try {
+        const uid = context.auth?.uid;
+        if (!uid) {
+          throw new functions.https
+              .HttpsError("unauthenticated", "User ID cannot be determined");
+        }
+
+        const {postId: postIdRaw} = data;
+        const postId = postIdRaw? postIdRaw as string : null;
+        if (!postId) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Cannot find post Id");
+        }
+        await db.postParticipants(postId).doc(uid).delete();
+
+        return {success: true,
+          message: "Delete application to post successfully"};
+      } catch (e) {
+        return {success: false, message: String(e)};
+      }
+    });
+
+export const responsePostApplication = functions.https.onCall(
+    async (data, context) => {
+      try {
+        const uid = context.auth?.uid;
+        if (!uid) {
+          throw new functions.https
+              .HttpsError("unauthenticated", "User ID cannot be determined");
+        }
+
+        const {postId: postIdRaw,
+          userId: userIdRaw,
+          responseStatus: responseRaw} = data;
+        const postId = postIdRaw? postIdRaw as string : null;
+        const userId = userIdRaw? userIdRaw as string : null;
+        const responseStatus = responseRaw?
+        responseRaw as AppliedRequestStatus: null;
+        if (!postId || !userId || !responseStatus) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Cannot find post Id");
+        }
+
+        const updatedApplication: FirestoreCustomParticipant = {
+          userId: uid,
+          status: responseStatus,
+        };
+        await db.postParticipants(postId).doc(uid).set(updatedApplication);
+
+        return {success: true,
+          message: "Delete application to post successfully"};
+      } catch (e) {
+        return {success: false, message: String(e)};
+      }
     });

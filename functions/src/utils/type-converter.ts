@@ -38,7 +38,6 @@ export function parsePostToFirestore(post: Post) {
     startDateTime: post.startDateTime,
     endDateTime: post.endDateTime,
     personCapacity: post.personCapacity,
-    applicants: [],
     location: post.location,
     id: post.id,
   };
@@ -48,8 +47,7 @@ export function parsePostToFirestore(post: Post) {
 export function parsePostFromFirestore(
     firestorePost: FirestoreCustomPost,
     firestorePoster: FirestoreCustomUser,
-    firestoreParticipants: FirestoreCustomUser[]) 
-    {
+    firestoreParticipants: FirestoreCustomUser[]) {
   const parsedPost: Post = {
     id: firestorePost.id,
     poster: parseUserFromFirestore(firestorePoster),

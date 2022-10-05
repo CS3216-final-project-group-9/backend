@@ -1,5 +1,5 @@
-import { Post } from "./post";
-import { User } from "./user";
+import {Post} from "./post";
+import {User} from "./user";
 
 /**
  * Status values for a request.
@@ -13,7 +13,7 @@ export enum AppliedRequestStatus {
 /**
  * Contains all details for an applied request.
  */
- export interface AppliedRequest {
+export interface AppliedRequest {
   post: Post;
   status: AppliedRequestStatus;
 }
@@ -27,8 +27,3 @@ export interface CreatedRequest {
   applicants: User[];
 }
 
-
-
-  
-
-  

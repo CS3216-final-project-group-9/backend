@@ -15,7 +15,7 @@ export type User = {
 export enum Faculty {
   ARTS_AND_SOCIAL_SCIENCES,
   BUSINESS,
-  COMPUTING, 
+  COMPUTING,
   DENTISTRY,
   DESIGN_AND_ENGINEERING,
   LAW,
