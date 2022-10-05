@@ -14,6 +14,7 @@ export type FirestoreCustomUser = {
     thumbnailPhoto: string;
     createdPostIds: string[];
     participatedPostIds: string[];
+    appliedPostIds: string[];
 }
 
 export type FirestoreCustomParticipant = {

@@ -6,7 +6,9 @@ import {FirestoreCustomParticipant,
 
 admin.initializeApp();
 
-const firestore = admin.firestore();
+
+// Need to use this for update array, as FieldValue cannot work with type
+export const unTypedFirestore = admin.firestore();
 
 // Type converter for Typescript
 // Reference : https://gist.github.com/JamieCurnow/cba3968a7f1e335d473632f9fc9f6e8b
@@ -17,7 +19,7 @@ const converter = <T>() => ({
     .QueryDocumentSnapshot) => snap.data() as T,
 });
 
-const dataPoint = <T>(collectionPath: string) => firestore
+const dataPoint = <T>(collectionPath: string) => unTypedFirestore
     .collection(collectionPath).withConverter(converter<T>());
 
 const db = {

@@ -4,6 +4,7 @@ import {Post} from "../type/post";
 
 export function parseUserToFirestore(user: User) {
   const parsedUser: FirestoreCustomUser = {
+    id: user.id,
     name: user.name,
     gender: user.gender,
     faculty: user.faculty,
@@ -13,7 +14,7 @@ export function parseUserToFirestore(user: User) {
     thumbnailPhoto: user.thumbnailPhoto,
     createdPostIds: [],
     participatedPostIds: [],
-    id: user.id,
+    appliedPostIds: []
   };
   return parsedUser;
 }

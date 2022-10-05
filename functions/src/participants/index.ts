@@ -1,7 +1,8 @@
 import * as functions from "firebase-functions";
-import {db} from "../firebase";
+import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomParticipant} from "../type/firebase-type";
 import {AppliedRequestStatus} from "../type/postApplication";
+import {FieldValue} from "firebase-admin/firestore";
 
 export const createPostApplication = functions.https.onCall(
     async (data, context) => {
@@ -22,7 +23,12 @@ export const createPostApplication = functions.https.onCall(
           userId: uid,
           status: AppliedRequestStatus.PENDING,
         };
+
         await db.postParticipants(postId).doc(uid).set(newApplication);
+
+        await unTypedFirestore.collection("users").doc(uid).set({
+          appliedPostIds: FieldValue.arrayUnion(postId)
+        });
 
         return {success: true, message: "Applied to post successfully"};
       } catch (e) {
@@ -46,6 +52,9 @@ export const deletePostApplication = functions.https.onCall(
           throw new functions.https
               .HttpsError("invalid-argument", "Cannot find post Id");
         }
+        await unTypedFirestore.collection("users").doc(uid).set({
+          appliedPostIds: FieldValue.arrayRemove(postId)
+        });
         await db.postParticipants(postId).doc(uid).delete();
 
         return {success: true,
@@ -71,9 +80,15 @@ export const responsePostApplication = functions.https.onCall(
         const userId = userIdRaw? userIdRaw as string : null;
         const responseStatus = responseRaw?
         responseRaw as AppliedRequestStatus: null;
-        if (!postId || !userId || !responseStatus) {
+        if (!postId || !userId || responseStatus == null) {
           throw new functions.https
               .HttpsError("invalid-argument", "Cannot find post Id");
+        }
+
+        if(responseStatus == AppliedRequestStatus.ACCEPTED) {
+          await unTypedFirestore.collection("users").doc(uid).set({
+            participatedPostIds: FieldValue.arrayUnion(postId)
+          });
         }
 
         const updatedApplication: FirestoreCustomParticipant = {
@@ -81,6 +96,9 @@ export const responsePostApplication = functions.https.onCall(
           status: responseStatus,
         };
         await db.postParticipants(postId).doc(uid).set(updatedApplication);
+        await unTypedFirestore.collection("users").doc(uid).set({
+          appliedPostIds: FieldValue.arrayRemove(postId)
+        });
 
         return {success: true,
           message: "Delete application to post successfully"};
