@@ -1,5 +1,6 @@
 import {Gender, Faculty } from "./user";
 import {PostLocation} from "./post";
+import { AppliedRequestStatus } from "./postApplication";
 
 
 export type FirestoreCustomUser = {
@@ -15,6 +16,11 @@ export type FirestoreCustomUser = {
     participatedPostIds: string[];
 }
 
+export type FirestoreCustomParticipant = {
+    userId: string;
+    status: AppliedRequestStatus;
+}
+
 export type FirestoreCustomPost = {
     id: string;
     posterId: string;
@@ -22,6 +28,6 @@ export type FirestoreCustomPost = {
     endDateTime: Date;
     personCapacity: number;
     /** List of users who have been confirmed to be going for the post event */
-    participantIds: string[];
+    applicants: FirestoreCustomParticipant[];
     location: PostLocation;
   }

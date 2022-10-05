@@ -38,9 +38,7 @@ export function parsePostToFirestore(post: Post) {
     startDateTime: post.startDateTime,
     endDateTime: post.endDateTime,
     personCapacity: post.personCapacity,
-    participantIds: Array.from(post.participants, (participant) => {
-      return participant.id;
-    }),
+    applicants: [],
     location: post.location,
     id: post.id,
   };

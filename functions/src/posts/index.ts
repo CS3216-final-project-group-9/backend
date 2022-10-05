@@ -3,6 +3,7 @@ import {db} from "../firebase";
 import {FirestoreCustomPost,
   FirestoreCustomUser} from "../type/firebase-type";
 import {Post} from "../type/post";
+import { AppliedRequestStatus } from "../type/postApplication";
 import {parsePostFromFirestore,
   parsePostToFirestore} from "../utils/type-converter";
 
@@ -164,14 +165,17 @@ async function getPostFromFirestorePost(firestorePost: FirestoreCustomPost) {
   }
   const participants: FirestoreCustomUser[] = [];
 
-  await Promise.all(firestorePost.participantIds.map(async (id) => {
-    const user = await db.users.doc(id).get();
-    const docData = user.data();
-    if (!docData) {
-      throw new functions.https
-          .HttpsError("aborted", "Cannot fetch user data");
+  await Promise.all(firestorePost.applicants.map(async (applicants) => {
+    if(applicants.status == AppliedRequestStatus.ACCEPTED) {
+      const user = await db.users.doc(applicants.userId).get();
+      const docData = user.data();
+      if (!docData) {
+        throw new functions.https
+            .HttpsError("aborted", "Cannot fetch user data");
+      }
+      participants.push(docData);
     }
-    participants.push(docData);
+    
   }));
   return parsePostFromFirestore(firestorePost, poster, participants);
 }
