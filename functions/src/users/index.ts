@@ -1,7 +1,8 @@
 import {db} from "../firebase";
 import * as functions from "firebase-functions";
 import {User} from "../type/user";
-import {parseUserFromFirestore, parseUserToFirestore} from "../utils/type-converter";
+import {parseUserFromFirestore,
+  parseUserToFirestore} from "../utils/type-converter";
 
 export const createUser = functions.https.onCall(async (data, context) => {
   try {
@@ -11,7 +12,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
     const newUser = data.user as User;
-    newUser.id = uid
+    newUser.id = uid;
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
     return {success: true, message: String("New user created successfully")};
@@ -22,7 +23,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
 
 
 export const hasCreatedUserProfile = functions.https.onCall(
-  async (data, context) => {
+    async (data, context) => {
       try {
         const uid = context.auth?.uid;
         if (!uid) {
@@ -50,13 +51,13 @@ export const getUser = functions.https.onCall(async (data, context) => {
   try {
     const {userId} = data;
     const userDoc = await db.users.doc(userId).get();
-    const user = userDoc.data()
-    if(!user) {
+    const user = userDoc.data();
+    if (!user) {
       throw new functions.https
           .HttpsError("not-found", "User profile not found");
     }
-    const parsedUser = parseUserFromFirestore(user)
-    return {success: true, message: parsedUser};    
+    const parsedUser = parseUserFromFirestore(user);
+    return {success: true, message: parsedUser};
   } catch (e) {
     return {success: false, message: e};
   }
@@ -70,12 +71,12 @@ export const getCurrentUser = functions.https.onCall(async (data, context) => {
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
     const userDoc = await db.users.doc(uid).get();
-    const user = userDoc.data()
-    if(!user) {
+    const user = userDoc.data();
+    if (!user) {
       throw new functions.https
           .HttpsError("not-found", "Current User profile not found");
     }
-    const parsedUser = parseUserFromFirestore(user)
+    const parsedUser = parseUserFromFirestore(user);
     return {success: true, message: parsedUser};
   } catch (e) {
     return {success: false, message: e};

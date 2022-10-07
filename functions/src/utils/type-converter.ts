@@ -14,7 +14,7 @@ export function parseUserToFirestore(user: User) {
     thumbnailPhoto: user.thumbnailPhoto,
     createdPostIds: [],
     participatedPostIds: [],
-    appliedPostIds: []
+    appliedPostIds: [],
   };
   return parsedUser;
 }

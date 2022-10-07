@@ -19,7 +19,6 @@ export interface AppliedRequest {
 }
 
 
-
 /**
  * Contains all details for a created request.
  */

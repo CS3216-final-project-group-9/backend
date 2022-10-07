@@ -1,11 +1,13 @@
-import { FieldValue } from "firebase-admin/firestore";
+import {FieldValue} from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost,
   FirestoreCustomUser} from "../type/firebase-type";
 import {Post} from "../type/post";
-import {AppliedRequest, AppliedRequestStatus, CreatedRequest} from "../type/postApplication";
-import { User } from "../type/user";
+import {AppliedRequest,
+  AppliedRequestStatus,
+  CreatedRequest} from "../type/postApplication";
+import {User} from "../type/user";
 import {parsePostFromFirestore,
   parsePostToFirestore,
   parseUserFromFirestore} from "../utils/type-converter";
@@ -26,7 +28,7 @@ export const createPost = functions.https.onCall(
         await ref.set(parsedPost);
 
         await unTypedFirestore.collection("users").doc(uid).set({
-          createdPostIds: FieldValue.arrayUnion(docId)
+          createdPostIds: FieldValue.arrayUnion(docId),
         });
 
         return {success: true, message: "Post created successfully"};
@@ -53,7 +55,7 @@ export const deletePost = functions.https.onCall(
         if (uid == post.data()?.posterId) {
           await db.posts.doc(postId).delete();
           await unTypedFirestore.collection("users").doc(uid).set({
-            createdPostIds: FieldValue.arrayRemove(postId)
+            createdPostIds: FieldValue.arrayRemove(postId),
           });
         }
 
@@ -85,45 +87,45 @@ export const updatePost = functions.https.onCall(
     });
 
 export const getPost = functions.https.onCall(
-  async(data, context) => {
-    try {
-      const uid = context.auth?.uid;
-      if (!uid) {
-        throw new functions.https
-            .HttpsError("unauthenticated", "User ID cannot be determined");
+    async (data, context) => {
+      try {
+        const uid = context.auth?.uid;
+        if (!uid) {
+          throw new functions.https
+              .HttpsError("unauthenticated", "User ID cannot be determined");
+        }
+        const {page: pageRaw, location: locationRaw} = data;
+        const page = pageRaw ? pageRaw as number: null;
+        if (!page) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Page is not provided");
+        }
+
+        const POST_PER_PAGE = 20;
+
+        const location = locationRaw? locationRaw as Location[]: null;
+        let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
+        if (!location) {
+          postSnapshot = await db.posts.orderBy("startDateTime")
+              .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+        } else {
+          postSnapshot = await db.posts.orderBy("startDateTime")
+              .where("location", "in", location)
+              .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+        }
+        const posts : Post[] = [];
+
+        await Promise.all(postSnapshot.docs.map( async (doc) => {
+          const firestorePost = doc.data();
+          const post = await getPostFromFirestorePost(firestorePost);
+          posts.push(post);
+        }));
+
+        return {success: true, message: posts};
+      } catch (e) {
+        return {success: false, message: e};
       }
-      const {page: pageRaw , location: locationRaw} = data
-      const page = pageRaw ? pageRaw as number: null;
-      if(!page) {
-        throw new functions.https
-            .HttpsError("invalid-argument", "Page is not provided");
-      }
-
-      const POST_PER_PAGE = 20;
-
-      const location = locationRaw? locationRaw as Location[]: null;
-      let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
-      if(!location) {
-        postSnapshot = await db.posts.orderBy('startDateTime')
-        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      } else {
-        postSnapshot = await db.posts.orderBy('startDateTime')
-        .where('location', 'in', location)
-        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      }
-      const posts : Post[] = [];
-
-      await Promise.all(postSnapshot.docs.map( async (doc) => {
-        const firestorePost = doc.data();
-        const post = await getPostFromFirestorePost(firestorePost);
-        posts.push(post);
-      }));
-
-      return {success: true, message: posts};
-    } catch (e) {
-      return {success: false, message: e};
-    }
-});
+    });
 
 export const getAllActivePosts = functions.https.onCall(
     async (data, context) => {
@@ -133,7 +135,7 @@ export const getAllActivePosts = functions.https.onCall(
           throw new functions.https
               .HttpsError("unauthenticated", "User ID cannot be determined");
         }
-        const postSnapshot = await db.posts.orderBy('startDateTime').get();
+        const postSnapshot = await db.posts.orderBy("startDateTime").get();
         const posts : Post[] = [];
         await Promise.all(postSnapshot.docs.map( async (doc) => {
           const firestorePost = doc.data();
@@ -170,7 +172,6 @@ export const getAppliedPosts = functions.https.onCall(
         }));
 
 
-
         const posts: Post[] = [];
         await Promise.all(firestorePosts.map( async (firestorePost) => {
           const post = await getPostFromFirestorePost(firestorePost);
@@ -179,12 +180,13 @@ export const getAppliedPosts = functions.https.onCall(
 
         const appliedRequests: AppliedRequest[] = [];
         await Promise.all(posts.map( async (post) => {
-          const participantDoc = await db.postParticipants(post.id).doc(uid).get();
-          const applyStatus = participantDoc.data()?.status
-          if(applyStatus) {
+          const participantDoc = await db.postParticipants(post.id)
+              .doc(uid).get();
+          const applyStatus = participantDoc.data()?.status;
+          if (applyStatus) {
             appliedRequests.push({
-              status:applyStatus,
-              post:post
+              status: applyStatus,
+              post: post,
             });
           }
         }));
@@ -226,19 +228,19 @@ export const getCreatedPosts = functions.https.onCall(
         const createdRequests: CreatedRequest[] = [];
         await Promise.all(posts.map( async (post) => {
           const participantsDoc = await db.postParticipants(post.id).get();
-          
+
           const applicants: User[] = [];
-          await Promise.all(participantsDoc.docs.map( async(participantDoc) => {
+          await Promise.all(participantsDoc.docs.map(async (participantDoc) => {
             const participant = participantDoc.data();
-            if(participant.status == AppliedRequestStatus.PENDING) {
+            if (participant.status == AppliedRequestStatus.PENDING) {
               const userDoc = await db.users.doc(participant.userId).get();
-              const user = userDoc.data() 
-              if(user) applicants.push(parseUserFromFirestore(user));
+              const user = userDoc.data();
+              if (user) applicants.push(parseUserFromFirestore(user));
             }
-          }))
+          }));
           createdRequests.push({
             post: post,
-            applicants: applicants
+            applicants: applicants,
           });
         }));
 

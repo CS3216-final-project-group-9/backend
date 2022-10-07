@@ -23,12 +23,12 @@ export const createPostApplication = functions.https.onCall(
           userId: uid,
           status: AppliedRequestStatus.PENDING,
         };
-        // Add post application 
+        // Add post application
         await db.postParticipants(postId).doc(uid).set(newApplication);
 
         // Add post to user profile
         await unTypedFirestore.collection("users").doc(uid).set({
-          appliedPostIds: FieldValue.arrayUnion(postId)
+          appliedPostIds: FieldValue.arrayUnion(postId),
         });
 
         return {success: true, message: "Applied to post successfully"};
@@ -54,7 +54,7 @@ export const deletePostApplication = functions.https.onCall(
               .HttpsError("invalid-argument", "Cannot find post Id");
         }
         await unTypedFirestore.collection("users").doc(uid).set({
-          appliedPostIds: FieldValue.arrayRemove(postId)
+          appliedPostIds: FieldValue.arrayRemove(postId),
         });
         await db.postParticipants(postId).doc(uid).delete();
 
@@ -86,9 +86,9 @@ export const responsePostApplication = functions.https.onCall(
               .HttpsError("invalid-argument", "Cannot find post Id");
         }
 
-        if(responseStatus == AppliedRequestStatus.ACCEPTED) {
+        if (responseStatus == AppliedRequestStatus.ACCEPTED) {
           await unTypedFirestore.collection("users").doc(uid).set({
-            participatedPostIds: FieldValue.arrayUnion(postId)
+            participatedPostIds: FieldValue.arrayUnion(postId),
           });
         }
 
@@ -98,7 +98,7 @@ export const responsePostApplication = functions.https.onCall(
         };
         await db.postParticipants(postId).doc(uid).set(updatedApplication);
         await unTypedFirestore.collection("users").doc(uid).set({
-          appliedPostIds: FieldValue.arrayRemove(postId)
+          appliedPostIds: FieldValue.arrayRemove(postId),
         });
 
         return {success: true,
