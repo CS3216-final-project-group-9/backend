@@ -3,6 +3,7 @@ import * as functions from "firebase-functions";
 import {User} from "../type/user";
 import {parseUserFromFirestore,
   parseUserToFirestore} from "../utils/type-converter";
+import { getPhoto } from "./profilePhoto";
 
 export const createUser = functions.https.onCall(async (data, context) => {
   try {
@@ -13,6 +14,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
     }
     const newUser = data.user as User;
     newUser.id = uid;
+    newUser.profilePhoto = getPhoto(newUser.gender)
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
     return {success: true, message: String("New user created successfully")};
