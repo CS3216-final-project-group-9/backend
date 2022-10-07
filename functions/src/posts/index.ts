@@ -1,5 +1,6 @@
+import { FieldValue } from "firebase-admin/firestore";
 import * as functions from "firebase-functions";
-import {db} from "../firebase";
+import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost,
   FirestoreCustomUser} from "../type/firebase-type";
 import {Post} from "../type/post";
@@ -17,8 +18,16 @@ export const createPost = functions.https.onCall(
         }
         const newPost = data.post as Post;
         const parsedPost = parsePostToFirestore(newPost);
+        const ref = db.posts.doc();
+        const docId = ref.id;
+        parsedPost.id = docId;
+        await ref.set(parsedPost);
 
-        await db.posts.doc(newPost.id).create(parsedPost);
+        await unTypedFirestore.collection("users").doc(uid).set({
+          createdPostIds: FieldValue.arrayUnion(docId)
+        });
+
+
         return {success: true, message: "Post created successfully"};
       } catch (e) {
         return {success: false, message: e};
@@ -39,9 +48,14 @@ export const deletePost = functions.https.onCall(
               .HttpsError("invalid-argument", "Post Id not provided");
         }
         const post = await db.posts.doc(postId).get();
+
         if (uid == post.data()?.posterId) {
           await db.posts.doc(postId).delete();
+          await unTypedFirestore.collection("users").doc(uid).set({
+            createdPostIds: FieldValue.arrayRemove(postId)
+          });
         }
+
         return {success: true, message: "Post deleted successfully"};
       } catch (e) {
         return {success: false, message: e};
@@ -58,15 +72,56 @@ export const updatePost = functions.https.onCall(
         }
         const newPost = data.post as Post;
         const parsedPost = parsePostToFirestore(newPost);
-        await db.posts.doc(newPost.id).create(parsedPost);
+        const post = await db.posts.doc(parsedPost.id).get();
+
+        if (uid == post.data()?.posterId) {
+          await db.posts.doc().set(parsedPost);
+        }
         return {success: true, message: "Post updated successfully"};
       } catch (e) {
         return {success: false, message: e};
       }
     });
 
-export const getPost = functions.https.onCall((data, context) => {
-  // ...
+export const getPost = functions.https.onCall(
+  async(data, context) => {
+    try {
+      const uid = context.auth?.uid;
+      if (!uid) {
+        throw new functions.https
+            .HttpsError("unauthenticated", "User ID cannot be determined");
+      }
+      const {page: pageRaw , location: locationRaw} = data
+      const page = pageRaw ? pageRaw as number: null;
+      if(!page) {
+        throw new functions.https
+            .HttpsError("invalid-argument", "Page is not provided");
+      }
+
+      const POST_PER_PAGE = 20;
+
+      const location = locationRaw? locationRaw as Location[]: null;
+      let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
+      if(!location) {
+        postSnapshot = await db.posts.orderBy('startDateTime')
+        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+      } else {
+        postSnapshot = await db.posts.orderBy('startDateTime')
+        .where('location', 'in', location)
+        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+      }
+      const posts : Post[] = [];
+
+      await Promise.all(postSnapshot.docs.map( async (doc) => {
+        const firestorePost = doc.data();
+        const post = await getPostFromFirestorePost(firestorePost);
+        posts.push(post);
+      }));
+
+      return {success: true, message: posts};
+    } catch (e) {
+      return {success: false, message: e};
+    }
 });
 
 export const getAllActivePosts = functions.https.onCall(
