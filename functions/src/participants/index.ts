@@ -23,16 +23,17 @@ export const createPostApplication = functions.https.onCall(
           userId: uid,
           status: AppliedRequestStatus.PENDING,
         };
-
+        // Add post application 
         await db.postParticipants(postId).doc(uid).set(newApplication);
 
+        // Add post to user profile
         await unTypedFirestore.collection("users").doc(uid).set({
           appliedPostIds: FieldValue.arrayUnion(postId)
         });
 
         return {success: true, message: "Applied to post successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     }
 );
@@ -60,7 +61,7 @@ export const deletePostApplication = functions.https.onCall(
         return {success: true,
           message: "Delete application to post successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -103,6 +104,6 @@ export const responsePostApplication = functions.https.onCall(
         return {success: true,
           message: "Delete application to post successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });

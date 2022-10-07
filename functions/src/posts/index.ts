@@ -21,7 +21,7 @@ export const createPost = functions.https.onCall(
         await db.posts.doc(newPost.id).create(parsedPost);
         return {success: true, message: "Post created successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -44,7 +44,7 @@ export const deletePost = functions.https.onCall(
         }
         return {success: true, message: "Post deleted successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -61,7 +61,7 @@ export const updatePost = functions.https.onCall(
         await db.posts.doc(newPost.id).create(parsedPost);
         return {success: true, message: "Post updated successfully"};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -87,7 +87,7 @@ export const getAllActivePosts = functions.https.onCall(
 
         return {success: true, message: posts};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -121,7 +121,7 @@ export const getAppliedPosts = functions.https.onCall(
 
         return {success: true, message: posts};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 
@@ -155,7 +155,7 @@ export const getCreatedPosts = functions.https.onCall(
 
         return {success: true, message: posts};
       } catch (e) {
-        return {success: false, message: String(e)};
+        return {success: false, message: e};
       }
     });
 

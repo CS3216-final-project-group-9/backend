@@ -18,6 +18,8 @@ export interface AppliedRequest {
   status: AppliedRequestStatus;
 }
 
+
+
 /**
  * Contains all details for a created request.
  */
