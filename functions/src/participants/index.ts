@@ -17,7 +17,7 @@ export const createPostApplication = functions.https.onCall(
         const postId = postIdRaw? postIdRaw as string : null;
         if (!postId) {
           throw new functions.https
-              .HttpsError("invalid-argument", "Cannot find post Id");
+              .HttpsError("not-found", "Cannot find post Id");
         }
         const newApplication: FirestoreCustomParticipant = {
           userId: uid,
@@ -51,7 +51,7 @@ export const deletePostApplication = functions.https.onCall(
         const postId = postIdRaw? postIdRaw as string : null;
         if (!postId) {
           throw new functions.https
-              .HttpsError("invalid-argument", "Cannot find post Id");
+              .HttpsError("not-found", "Cannot find post Id");
         }
         await unTypedFirestore.collection("users").doc(uid).set({
           appliedPostIds: FieldValue.arrayRemove(postId),
@@ -83,7 +83,14 @@ export const responsePostApplication = functions.https.onCall(
         responseRaw as AppliedRequestStatus: null;
         if (!postId || !userId || responseStatus == null) {
           throw new functions.https
-              .HttpsError("invalid-argument", "Cannot find post Id");
+              .HttpsError("invalid-argument", "Not enough argument");
+        }
+
+        const postDoc = await db.posts.doc(postId).get();
+
+        if (uid != postDoc.data()?.posterId) {
+          throw new functions.https
+              .HttpsError("permission-denied", "User is not post author");
         }
 
         if (responseStatus == AppliedRequestStatus.ACCEPTED) {
@@ -97,12 +104,13 @@ export const responsePostApplication = functions.https.onCall(
           status: responseStatus,
         };
         await db.postParticipants(postId).doc(uid).set(updatedApplication);
+
         await unTypedFirestore.collection("users").doc(uid).set({
-          appliedPostIds: FieldValue.arrayRemove(postId),
+          participatedPostIds: FieldValue.arrayUnion(postId),
         });
 
         return {success: true,
-          message: "Delete application to post successfully"};
+          message: "Response to applicant successfully"};
       } catch (e) {
         return {success: false, message: e};
       }

@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost,
   FirestoreCustomUser} from "../type/firebase-type";
-import {Post} from "../type/post";
+import {Post, PostLocation} from "../type/post";
 import {AppliedRequest,
   AppliedRequestStatus,
   CreatedRequest} from "../type/postApplication";
@@ -52,12 +52,15 @@ export const deletePost = functions.https.onCall(
         }
         const post = await db.posts.doc(postId).get();
 
-        if (uid == post.data()?.posterId) {
-          await db.posts.doc(postId).delete();
-          await unTypedFirestore.collection("users").doc(uid).set({
-            createdPostIds: FieldValue.arrayRemove(postId),
-          });
+        if (uid != post.data()?.posterId) {
+          throw new functions.https
+              .HttpsError("permission-denied", "User is not post author");
         }
+
+        await db.posts.doc(postId).delete();
+        await unTypedFirestore.collection("users").doc(uid).set({
+          createdPostIds: FieldValue.arrayRemove(postId),
+        });
 
         return {success: true, message: "Post deleted successfully"};
       } catch (e) {
@@ -69,6 +72,7 @@ export const updatePost = functions.https.onCall(
     async (data, context) => {
       try {
         const uid = context.auth?.uid;
+
         if (!uid) {
           throw new functions.https
               .HttpsError("unauthenticated", "User ID cannot be determined");
@@ -76,10 +80,13 @@ export const updatePost = functions.https.onCall(
         const newPost = data.post as Post;
         const parsedPost = parsePostToFirestore(newPost);
         const post = await db.posts.doc(parsedPost.id).get();
-
-        if (uid == post.data()?.posterId) {
-          await db.posts.doc().set(parsedPost);
+        if (uid != post.data()?.posterId) {
+          throw new functions.https
+              .HttpsError("permission-denied", "User is not post author");
         }
+        await db.posts.doc().set(parsedPost);
+
+
         return {success: true, message: "Post updated successfully"};
       } catch (e) {
         return {success: false, message: e};
@@ -89,11 +96,6 @@ export const updatePost = functions.https.onCall(
 export const getPost = functions.https.onCall(
     async (data, context) => {
       try {
-        const uid = context.auth?.uid;
-        if (!uid) {
-          throw new functions.https
-              .HttpsError("unauthenticated", "User ID cannot be determined");
-        }
         const {page: pageRaw, location: locationRaw} = data;
         const page = pageRaw ? pageRaw as number: null;
         if (!page) {
@@ -103,7 +105,7 @@ export const getPost = functions.https.onCall(
 
         const POST_PER_PAGE = 20;
 
-        const location = locationRaw? locationRaw as Location[]: null;
+        const location = locationRaw? locationRaw as PostLocation[]: null;
         let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
         if (!location) {
           postSnapshot = await db.posts.orderBy("startDateTime")
@@ -130,11 +132,6 @@ export const getPost = functions.https.onCall(
 export const getAllActivePosts = functions.https.onCall(
     async (data, context) => {
       try {
-        const uid = context.auth?.uid;
-        if (!uid) {
-          throw new functions.https
-              .HttpsError("unauthenticated", "User ID cannot be determined");
-        }
         const postSnapshot = await db.posts.orderBy("startDateTime").get();
         const posts : Post[] = [];
         await Promise.all(postSnapshot.docs.map( async (doc) => {
@@ -161,7 +158,7 @@ export const getAppliedPosts = functions.https.onCall(
         const user = userDoc.data();
         if (!user) {
           throw new functions.https
-              .HttpsError("aborted", "Cannot fetch user data");
+              .HttpsError("not-found", "Cannot fetch user data");
         }
         const firestorePosts : FirestoreCustomPost[] = [];
 
@@ -209,7 +206,7 @@ export const getCreatedPosts = functions.https.onCall(
         const user = userDoc.data();
         if (!user) {
           throw new functions.https
-              .HttpsError("aborted", "Cannot fetch user data");
+              .HttpsError("not-found", "Cannot fetch user data");
         }
         const firestorePosts : FirestoreCustomPost[] = [];
 
