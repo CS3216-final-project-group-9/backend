@@ -5,6 +5,8 @@ import * as posts from "./posts";
 
 // Users
 export const createUser = users.createUser;
+export const updateUser = users.updateUser;
+
 export const getUser = users.getUser;
 export const getCurrentUser = users.getCurrentUser;
 export const hasCreatedUserProfile = users.hasCreatedUserProfile;
