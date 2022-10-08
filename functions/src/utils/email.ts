@@ -19,7 +19,7 @@ export function notifyApplicantSessionApplied(post: Post, participant: User) {
   const subject = 'Your application to study with has been received!';
   const title = `Your application to study with ${poster} has been received!`
   const message = `${poster} has been notified. Once ${poster} has accepted your application, you will be notified and telegram details will be shared with you!`;
-  return sendEmailToUser(post.poster, subject, title, message); 
+  return sendEmailToUser(participant, subject, title, message); 
 }
 
 export function notifyPosterHasNewApplicant(post: Post) {
