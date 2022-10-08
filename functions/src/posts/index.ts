@@ -103,14 +103,19 @@ export const getPost = functions.https.onCall(async (data, context) => {
   try {
     const {page: pageRaw, location: locationRaw} = data;
     const page = pageRaw ? pageRaw as number: null;
+    const location = locationRaw? locationRaw as PostLocation[]: null;
+
     if (!page) {
       throw new functions.https
           .HttpsError("invalid-argument", "Page is not provided");
     }
-
-    const location = locationRaw? locationRaw as PostLocation[]: null;
-    let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
     if (!location) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Location is not provided");
+    }
+
+    let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
+    if (location.length == 0) {
       postSnapshot = await db.posts.orderBy("startDateTime")
           .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
     } else {
