@@ -1,20 +1,11 @@
 import {db} from "../firebase";
 import { FirestoreMail } from "../type/firebase-type";
-import { Post, PostLocation } from "../type/post";
+import { Post } from "../type/post";
 import { AppliedRequest } from "../type/postApplication";
 import { User } from "../type/user";
 import { getAuth } from 'firebase-admin/auth';
 import momentTimezone = require("moment-timezone");
  
-function sendEmailToUser(user: User,subject: string, title: string, message: string) {
- return getAuth().getUser(user.id).then((userRecord) => {
-  if (!userRecord.email) {
-    return Promise.reject('Email not found');
-  }
-  const email = userRecord.email;
-  return sendEmail(user.name, email, subject, title, message);
-  })
-}
 
 export function notifyPosterPostCreated(post: Post) {
   const subject = 'Your study post is now live!';
@@ -71,20 +62,6 @@ export function notifyParticipantsHostCancelled(post: Post) {
     promises.push(sendEmailToUser(user, subject, title, message));
   }
   return Promise.all(promises);
-}
-
-
-function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
-  const emailHtml = getEmailTemplate(username, title, message);
-  const mail: FirestoreMail = {
-    message: {
-      subject: subject,
-      text: '',
-      html: emailHtml,
-    },
-    to: email,
-  }
-  return db.mail.doc().create(mail);
 }
 
 /**
@@ -297,3 +274,28 @@ table, td { color: #000000; } </style>
 }
 
 
+
+
+function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
+  const emailHtml = getEmailTemplate(username, title, message);
+  const mail: FirestoreMail = {
+    message: {
+      subject: subject,
+      text: '',
+      html: emailHtml,
+    },
+    to: email,
+  }
+  return db.mail.doc().create(mail);
+}
+
+function sendEmailToUser(user: User,subject: string, title: string, message: string) {
+  return getAuth().getUser(user.id).then((userRecord) => {
+   if (!userRecord.email) {
+     return Promise.reject('Email not found');
+   }
+   const email = userRecord.email;
+   return sendEmail(user.name, email, subject, title, message);
+   })
+ }
+ 
