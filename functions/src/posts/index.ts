@@ -12,6 +12,10 @@ import {parsePostFromFirestore,
   parsePostToFirestore,
   parseUserFromFirestore} from "../utils/type-converter";
 
+
+const POST_PER_PAGE = 20;
+
+
 export const createPost = functions.https.onCall(
     async (data, context) => {
       try {
@@ -103,8 +107,6 @@ export const getPost = functions.https.onCall(
               .HttpsError("invalid-argument", "Page is not provided");
         }
 
-        const POST_PER_PAGE = 20;
-
         const location = locationRaw? locationRaw as PostLocation[]: null;
         let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
         if (!location) {
@@ -154,15 +156,26 @@ export const getAppliedPosts = functions.https.onCall(
           throw new functions.https
               .HttpsError("unauthenticated", "User ID cannot be determined");
         }
+
+
         const userDoc = await db.users.doc(uid).get();
         const user = userDoc.data();
         if (!user) {
           throw new functions.https
               .HttpsError("not-found", "Cannot fetch user data");
         }
+
+        const {page: pageRaw} = data;
+        const page = pageRaw ? pageRaw as number: null;
+        if (!page) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Page is not provided");
+        }
+        const pagePost = user.participatedPostIds
+            .slice((page - 1) * POST_PER_PAGE, page * POST_PER_PAGE);
         const firestorePosts : FirestoreCustomPost[] = [];
 
-        await Promise.all(user.participatedPostIds.map( async (postId) => {
+        await Promise.all(pagePost.map( async (postId) => {
           const firestorePostDoc = await db.posts.doc(postId).get();
           const firestorePost = firestorePostDoc.data();
           if (firestorePost)firestorePosts.push(firestorePost);
@@ -210,7 +223,16 @@ export const getCreatedPosts = functions.https.onCall(
         }
         const firestorePosts : FirestoreCustomPost[] = [];
 
-        await Promise.all(user.createdPostIds.map( async (postId) => {
+        const {page: pageRaw} = data;
+        const page = pageRaw ? pageRaw as number: null;
+        if (!page) {
+          throw new functions.https
+              .HttpsError("invalid-argument", "Page is not provided");
+        }
+        const pagePost = user.createdPostIds
+            .slice((page - 1) * POST_PER_PAGE, page * POST_PER_PAGE);
+
+        await Promise.all(pagePost.map( async (postId) => {
           const firestorePostDoc = await db.posts.doc(postId).get();
           const firestorePost = firestorePostDoc.data();
           if (firestorePost)firestorePosts.push(firestorePost);

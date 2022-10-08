@@ -1,40 +1,40 @@
 import {db} from "../firebase";
-import { FirestoreMail } from "../type/firebase-type";
-import { Post } from "../type/post";
-import { AppliedRequest } from "../type/postApplication";
-import { User } from "../type/user";
-import { getAuth } from 'firebase-admin/auth';
+import {FirestoreMail} from "../type/firebase-type";
+import {Post} from "../type/post";
+import {AppliedRequest} from "../type/postApplication";
+import {User} from "../type/user";
+import {getAuth} from "firebase-admin/auth";
 import momentTimezone = require("moment-timezone");
- 
+
 
 export function notifyPosterPostCreated(post: Post) {
-  const subject = 'Your study post is now live!';
-  const title = 'Your study post is now live!';
-  const message = 'You will receive emails when others apply to study with you. Simply accept them and telegram details will be shared!';
+  const subject = "Your study post is now live!";
+  const title = "Your study post is now live!";
+  const message = "You will receive emails when others apply to study with you. Simply accept them and telegram details will be shared!";
   return sendEmailToUser(post.poster, subject, title, message);
 }
 
 export function notifyApplicantSessionApplied(post: Post, participant: User) {
   const poster = post.poster.name;
-  const subject = 'Your application to study with has been received!';
-  const title = `Your application to study with ${poster} has been received!`
+  const subject = "Your application to study with has been received!";
+  const title = `Your application to study with ${poster} has been received!`;
   const message = `${poster} has been notified. Once ${poster} has accepted your application, you will be notified and telegram details will be shared with you!`;
-  return sendEmailToUser(participant, subject, title, message); 
+  return sendEmailToUser(participant, subject, title, message);
 }
 
 export function notifyPosterHasNewApplicant(post: Post) {
-  const subject = 'New Applicant for your post!';
-  const title = 'You have a new applicant for your study post!';
-  const message = 'Log in to BuddyNUS to accept them!';
+  const subject = "New Applicant for your post!";
+  const title = "You have a new applicant for your study post!";
+  const message = "Log in to BuddyNUS to accept them!";
   return sendEmailToUser(post.poster, subject, title, message);
 }
 
 export function notifyParticipantHostAccepted(post: Post, participant: User) {
-  const postDate = momentTimezone(post.startDateTime).format('MMM D');
+  const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const postLocation = post.location;
   const poster = post.poster.name;
-  const subject = 'Your study session is confirmed!';
-  const title = ``
+  const subject = "Your study session is confirmed!";
+  const title = "";
   const message = `Your study session with ${poster} scheduled for ${postDate} at ${postLocation} has been confirmed! Log in to BuddyNUS for more details`;
   return sendEmailToUser(participant, subject, title, message);
 }
@@ -42,44 +42,40 @@ export function notifyParticipantHostAccepted(post: Post, participant: User) {
 
 export function notifyPosterApplicantCancelled(applicant: AppliedRequest) {
   const post = applicant.post;
-  const postDate = momentTimezone(post.startDateTime).format('MMM D');
+  const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const postLocation = post.location;
-  const subject = 'Applicant has cancelled!';
-  const title = `An applicant has cancelled!`
+  const subject = "Applicant has cancelled!";
+  const title = "An applicant has cancelled!";
   const message = `An applicant has cancelled a study session with you scheduled for ${postDate} at ${postLocation}`;
   return sendEmailToUser(post.poster, subject, title, message);
 }
 
 export function notifyParticipantHostCancelled(post: Post, participant: User) {
-  const postDate = momentTimezone(post.startDateTime).format('MMM D');
+  const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const postLocation = post.location;
-  const subject = 'Study session cancelled!';
-  const title = `Your study session cancelled!`
+  const subject = "Study session cancelled!";
+  const title = "Your study session cancelled!";
   const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
   return sendEmailToUser(participant, subject, title, message);
 }
 
 export function notifyParticipantsHostCancelled(post: Post) {
-  const postDate = momentTimezone(post.startDateTime).format('MMM D');
+  const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const users = post.participants;
   const postLocation = post.location;
   const promises = [];
   for (const user of users) {
-    const subject = 'Study session cancelled!';
-    const title = `Your study session cancelled!`
+    const subject = "Study session cancelled!";
+    const title = "Your study session cancelled!";
     const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
     promises.push(sendEmailToUser(user, subject, title, message));
   }
   return Promise.all(promises);
 }
 
-/**
- * @param username Username of recipient
- * @param message Message to be sent to recipient
- * @returns An email template
- */
+
 function getEmailTemplate(username: string, title: string, message: string) {
-return `
+  return `
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -249,8 +245,8 @@ table, td { color: #000000; } </style>
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px;font-family:arial,helvetica,sans-serif;" align="left">
         
   <div style="line-height: 140%; text-align: left; word-wrap: break-word;">
-    <p style="font-size: 14px; line-height: 140%;">Hi ${username}, </p>
-<p style="font-size: 14px; line-height: 140%;"> </p>
+    <p style="font-size: 14px; line-height: 140%;">Hi ${username},</p>
+<p style="font-size: 14px; line-height: 140%;"></p>
 <p style="font-size: 14px; line-height: 140%;">${message}</p>
   </div>
 
@@ -283,28 +279,26 @@ table, td { color: #000000; } </style>
 }
 
 
-
-
 function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
   const emailHtml = getEmailTemplate(username, title, message);
   const mail: FirestoreMail = {
     message: {
       subject: subject,
-      text: '',
+      text: "",
       html: emailHtml,
     },
     to: email,
-  }
+  };
   return db.mail.doc().create(mail);
 }
 
-function sendEmailToUser(user: User,subject: string, title: string, message: string) {
+async function sendEmailToUser(user: User, subject: string, title: string, message: string) {
   return getAuth().getUser(user.id).then((userRecord) => {
-   if (!userRecord.email) {
-     return Promise.reject('Email not found');
-   }
-   const email = userRecord.email;
-   return sendEmail(user.name, email, subject, title, message);
-   })
- }
- 
+    if (!userRecord.email) {
+      return Promise.reject(new Error("Email not found"));
+    }
+    const email = userRecord.email;
+    return sendEmail(user.name, email, subject, title, message);
+  });
+}
+

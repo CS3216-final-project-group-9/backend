@@ -18,8 +18,8 @@ export const deletePost = posts.deletePost;
 export const updatePost = posts.updatePost;
 export const getPost = posts.getPost;
 export const getAllActivePosts = posts.getAllActivePosts;
-export const getAllAppliedPosts = posts.getAppliedPosts;
-export const getAllCreatedPosts = posts.getCreatedPosts;
+export const getAppliedPosts = posts.getAppliedPosts;
+export const getCreatedPosts = posts.getCreatedPosts;
 
 
 // Participants

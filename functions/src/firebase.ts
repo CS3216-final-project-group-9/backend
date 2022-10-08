@@ -29,7 +29,7 @@ const db = {
   posts: dataPoint<FirestoreCustomPost>("posts"),
   postParticipants: (postId: string) =>
     dataPoint<FirestoreCustomParticipant>(`posts/${postId}/participants`),
-  mail: dataPoint<FirestoreMail>("mail")
+  mail: dataPoint<FirestoreMail>("mail"),
 };
 
 export {admin, db};
