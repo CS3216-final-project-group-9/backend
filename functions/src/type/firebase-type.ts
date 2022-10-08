@@ -2,6 +2,16 @@ import {Gender, Faculty} from "./user";
 import {PostLocation} from "./post";
 import {AppliedRequestStatus} from "./postApplication";
 
+type Message = {
+    subject: string;
+    text: string;
+    html: string;
+}
+
+export type FirestoreMail = {
+    to: string;
+    message: Message
+}
 
 export type FirestoreCustomUser = {
     id: string;
