@@ -12,9 +12,17 @@ export const createUser = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const newUser = data.user as User;
+    const {user: userRaw} = data
+    if (!userRaw) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "User object cannot be found");
+    }
+
+    const newUser = userRaw as User;
     newUser.id = uid;
-    newUser.profilePhoto = getPhoto(newUser.gender);
+    const photos = getPhoto(newUser.gender);
+    newUser.thumbnailPhoto = photos[0];
+    newUser.profilePhoto = photos[1];
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
     return {success: true, message: String("New user created successfully")};
@@ -71,7 +79,12 @@ export const updateUser = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const updatedUser = data.user as User;
+    const {user: userRaw} = data
+    if (!userRaw) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "User object cannot be found");
+    }
+    const updatedUser = userRaw as User;
     const firebaseUser = parseUserToFirestore(updatedUser);
     await db.users.doc(uid).set(firebaseUser);
     return {success: true, message: String("User updated successfully")};
