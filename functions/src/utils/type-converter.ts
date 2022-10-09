@@ -38,9 +38,9 @@ export function parsePostToFirestore(post: Post) {
     posterId: post.poster.id,
     startDateTime: post.startDateTime,
     endDateTime: post.endDateTime,
-    personCapacity: post.personCapacity,
     location: post.location,
     id: post.id,
+    description: post.description,
   };
   return parsedPost;
 }
@@ -51,10 +51,10 @@ export function parsePostFromFirestore(
     firestoreParticipants: FirestoreCustomUser[]) {
   const parsedPost: Post = {
     id: firestorePost.id,
+    description: firestorePost.description,
     poster: parseUserFromFirestore(firestorePoster),
     startDateTime: firestorePost.startDateTime,
     endDateTime: firestorePost.endDateTime,
-    personCapacity: firestorePost.personCapacity,
     participants: Array.from(firestoreParticipants, (participant) => {
       return parseUserFromFirestore(participant);
     }),

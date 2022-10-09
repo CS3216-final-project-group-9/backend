@@ -9,10 +9,10 @@ export type Post = {
   poster: User
   startDateTime: Date;
   endDateTime: Date;
-  personCapacity: number;
   /** List of users who have been confirmed to be going for the post event */
   participants: User[];
   location: PostLocation;
+  description: string;
 }
 
 

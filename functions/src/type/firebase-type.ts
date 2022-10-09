@@ -37,7 +37,7 @@ export type FirestoreCustomPost = {
     posterId: string;
     startDateTime: Date;
     endDateTime: Date;
-    personCapacity: number;
     /** List of users who have been confirmed to be going for the post event */
     location: PostLocation;
+    description: string;
   }

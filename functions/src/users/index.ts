@@ -12,7 +12,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const {user: userRaw} = data
+    const {user: userRaw} = data;
     if (!userRaw) {
       throw new functions.https
           .HttpsError("invalid-argument", "User object cannot be found");
@@ -79,7 +79,7 @@ export const updateUser = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const {user: userRaw} = data
+    const {user: userRaw} = data;
     if (!userRaw) {
       throw new functions.https
           .HttpsError("invalid-argument", "User object cannot be found");

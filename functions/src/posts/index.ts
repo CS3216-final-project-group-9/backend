@@ -31,17 +31,33 @@ export const createPost = functions.https.onCall(async (data, context) => {
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
 
-    const {post: postRaw} = data
+    const userDoc = await db.users.doc(uid).get();
+    const firestoreUser = userDoc.data();
+    if (!firestoreUser) {
+      throw new functions.https
+          .HttpsError("not-found", "User not found in database");
+    }
+    const user = parseUserFromFirestore(firestoreUser);
 
-    if(!postRaw) {
+    const {post: postRaw} = data;
+
+    if (!postRaw) {
       throw new functions.https
           .HttpsError("invalid-argument", "Post Object is not provided");
     }
-    const newPost = postRaw as Post;
-    const parsedPost = parsePostToFirestore(newPost);
     const ref = db.posts.doc();
     const docId = ref.id;
-    parsedPost.id = docId;
+
+    const newPost: Post = {
+      id: docId,
+      poster: user,
+      startDateTime: postRaw.startDateTime as Date,
+      endDateTime: postRaw.endDateTime as Date,
+      participants: [],
+      location: postRaw.location as PostLocation,
+      description: postRaw.description as string,
+    };
+    const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
 
     await unTypedFirestore.collection("users").doc(uid).set({
@@ -105,9 +121,9 @@ export const updatePost = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const {post: postRaw} = data
+    const {post: postRaw} = data;
 
-    if(!postRaw) {
+    if (!postRaw) {
       throw new functions.https
           .HttpsError("invalid-argument", "Post Object is not provided");
     }
