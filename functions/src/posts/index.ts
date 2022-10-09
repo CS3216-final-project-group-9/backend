@@ -17,7 +17,7 @@ import {
 import {
   getAllPostsFromFirestorePosts,
   getFirestorePostsFromId,
-  getFirestorePostsFromSnapshot,
+  getPostsFromSnapshot,
   getPostFromFirestorePost,
 } from "./firestorePost";
 
@@ -60,9 +60,10 @@ export const createPost = functions.https.onCall(async (data, context) => {
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
 
-    await unTypedFirestore.collection("users").doc(uid).set({
-      createdPostIds: FieldValue.arrayUnion(docId),
-    });
+    await unTypedFirestore.collection("users").doc(uid).set(
+        {createdPostIds: FieldValue.arrayUnion(docId)},
+        {merge: true}
+    );
 
     // Email notifications
     await notifyPosterPostCreated(newPost);
@@ -98,9 +99,10 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     }
 
     await db.posts.doc(postId).delete();
-    await unTypedFirestore.collection("users").doc(uid).set({
-      createdPostIds: FieldValue.arrayRemove(postId),
-    });
+    await unTypedFirestore.collection("users").doc(uid).set(
+        {createdPostIds: FieldValue.arrayRemove(postId)},
+        {merge: true}
+    );
 
     // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
@@ -168,7 +170,7 @@ export const getPost = functions.https.onCall(async (data, context) => {
           .where("location", "in", location)
           .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
     }
-    const posts = await getFirestorePostsFromSnapshot(postSnapshot);
+    const posts = await getPostsFromSnapshot(postSnapshot);
 
     return {success: true, message: posts};
   } catch (e) {
@@ -179,7 +181,7 @@ export const getPost = functions.https.onCall(async (data, context) => {
 export const getAllActivePosts = functions.https.onCall(async (data, context) => {
   try {
     const postSnapshot = await db.posts.orderBy("startDateTime").get();
-    const posts = await getFirestorePostsFromSnapshot(postSnapshot);
+    const posts = await getPostsFromSnapshot(postSnapshot);
 
     return {success: true, message: posts};
   } catch (e) {

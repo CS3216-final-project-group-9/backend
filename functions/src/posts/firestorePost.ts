@@ -25,7 +25,7 @@ export async function getFirestorePostsFromId(idList:string[]) {
   return firestorePosts;
 }
 
-export async function getFirestorePostsFromSnapshot(postSnapshot:FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>) {
+export async function getPostsFromSnapshot(postSnapshot:FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>) {
   const posts : Post[] = [];
   await Promise.all(postSnapshot.docs.map( async (doc) => {
     const firestorePost = doc.data();

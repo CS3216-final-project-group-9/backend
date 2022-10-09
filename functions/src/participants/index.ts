@@ -33,9 +33,10 @@ export const createPostApplication = functions.https.onCall(async (data, context
     await db.postParticipants(postId).doc(uid).set(newApplication);
 
     // Add post to user profile
-    await unTypedFirestore.collection("users").doc(uid).set({
-      appliedPostIds: FieldValue.arrayUnion(postId),
-    });
+    await unTypedFirestore.collection("users").doc(uid).set(
+        {appliedPostIds: FieldValue.arrayUnion(postId)},
+        {merge: true}
+    );
 
 
     // Email notifications
@@ -68,9 +69,10 @@ export const deletePostApplication = functions.https.onCall(async (data, context
     const {post} = await getParticipantAndPost(uid, postId);
 
 
-    await unTypedFirestore.collection("users").doc(uid).set({
-      appliedPostIds: FieldValue.arrayRemove(postId),
-    });
+    await unTypedFirestore.collection("users").doc(uid).set(
+        {appliedPostIds: FieldValue.arrayRemove(postId)},
+        {merge: true}
+    );
     await db.postParticipants(postId).doc(uid).delete();
 
     // Email notification
@@ -115,9 +117,10 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     }
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      await unTypedFirestore.collection("users").doc(uid).set({
-        participatedPostIds: FieldValue.arrayUnion(postId),
-      });
+      await unTypedFirestore.collection("users").doc(uid).set(
+          {participatedPostIds: FieldValue.arrayUnion(postId)},
+          {merge: true}
+      );
       await notifyParticipantHostAccepted(post, participant);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
@@ -129,9 +132,10 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     };
     await db.postParticipants(postId).doc(uid).set(updatedApplication);
 
-    await unTypedFirestore.collection("users").doc(uid).set({
-      participatedPostIds: FieldValue.arrayUnion(postId),
-    });
+    await unTypedFirestore.collection("users").doc(uid).set(
+        {participatedPostIds: FieldValue.arrayUnion(postId)},
+        {merge: true}
+    );
 
     return {success: true,
       message: "Response to applicant successfully"};

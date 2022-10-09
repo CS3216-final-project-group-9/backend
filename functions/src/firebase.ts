@@ -4,9 +4,7 @@ import {FirestoreCustomParticipant,
   FirestoreCustomUser,
   FirestoreMail} from "./type/firebase-type";
 
-
 admin.initializeApp();
-
 
 // Need to use this for update array, as FieldValue cannot work with type
 export const unTypedFirestore = admin.firestore();
@@ -27,8 +25,7 @@ const db = {
   // list your collections here
   users: dataPoint<FirestoreCustomUser>("users"),
   posts: dataPoint<FirestoreCustomPost>("posts"),
-  postParticipants: (postId: string) =>
-    dataPoint<FirestoreCustomParticipant>(`posts/${postId}/participants`),
+  postParticipants: (postId: string) =>dataPoint<FirestoreCustomParticipant>(`posts/${postId}/participants`),
   mail: dataPoint<FirestoreMail>("mail"),
 };
 
