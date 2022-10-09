@@ -9,6 +9,7 @@ import {
   CreatedRequest,
 } from "../type/postApplication";
 import {User} from "../type/user";
+import {notifyParticipantsHostCancelled, notifyPosterPostCreated} from "../utils/email";
 import {
   parsePostToFirestore,
   parseUserFromFirestore,
@@ -17,6 +18,7 @@ import {
   getAllPostsFromFirestorePosts,
   getFirestorePostsFromId,
   getFirestorePostsFromSnapshot,
+  getPostFromFirestorePost,
 } from "./firestorePost";
 
 const POST_PER_PAGE = 20;
@@ -39,6 +41,9 @@ export const createPost = functions.https.onCall(async (data, context) => {
       createdPostIds: FieldValue.arrayUnion(docId),
     });
 
+    // Email notifications
+    await notifyPosterPostCreated(newPost);
+
     return {success: true, message: "Post created successfully"};
   } catch (e) {
     return {success: false, message: e};
@@ -57,9 +62,14 @@ export const deletePost = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("invalid-argument", "Post Id not provided");
     }
-    const post = await db.posts.doc(postId).get();
+    const postDoc = await db.posts.doc(postId).get();
+    const firestorePost = postDoc.data();
 
-    if (uid != post.data()?.posterId) {
+    if (!firestorePost) {
+      throw new functions.https.HttpsError("not-found", "Post not found");
+    }
+
+    if (uid != firestorePost.posterId) {
       throw new functions.https
           .HttpsError("permission-denied", "User is not post author");
     }
@@ -68,6 +78,11 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     await unTypedFirestore.collection("users").doc(uid).set({
       createdPostIds: FieldValue.arrayRemove(postId),
     });
+
+    // Email notification
+    const post = await getPostFromFirestorePost(firestorePost);
+    await notifyParticipantsHostCancelled(post);
+
 
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {

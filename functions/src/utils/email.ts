@@ -1,7 +1,6 @@
 import {db} from "../firebase";
 import {FirestoreMail} from "../type/firebase-type";
 import {Post} from "../type/post";
-import {AppliedRequest} from "../type/postApplication";
 import {User} from "../type/user";
 import {getAuth} from "firebase-admin/auth";
 import momentTimezone = require("moment-timezone");
@@ -40,8 +39,7 @@ export function notifyParticipantHostAccepted(post: Post, participant: User) {
 }
 
 
-export function notifyPosterApplicantCancelled(applicant: AppliedRequest) {
-  const post = applicant.post;
+export function notifyPosterApplicantCancelled(post: Post) {
   const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const postLocation = post.location;
   const subject = "Applicant has cancelled!";
