@@ -30,7 +30,14 @@ export const createPost = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const newPost = data.post as Post;
+
+    const {post: postRaw} = data
+
+    if(!postRaw) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Post Object is not provided");
+    }
+    const newPost = postRaw as Post;
     const parsedPost = parsePostToFirestore(newPost);
     const ref = db.posts.doc();
     const docId = ref.id;
@@ -98,8 +105,15 @@ export const updatePost = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
-    const newPost = data.post as Post;
-    const parsedPost = parsePostToFirestore(newPost);
+    const {post: postRaw} = data
+
+    if(!postRaw) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Post Object is not provided");
+    }
+
+    const updatePost = postRaw as Post;
+    const parsedPost = parsePostToFirestore(updatePost);
     const post = await db.posts.doc(parsedPost.id).get();
     if (uid != post.data()?.posterId) {
       throw new functions.https
