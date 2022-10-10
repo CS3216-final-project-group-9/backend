@@ -22,6 +22,13 @@ export const createPostApplication = functions.https.onCall(async (data, context
           .HttpsError("invalid-argument", "Post Id argument not provided");
     }
 
+    const participant = await db.postParticipants(postId).doc(uid).get();
+
+    if (participant.exists) {
+      throw new functions.https
+          .HttpsError("already-exists", "User already applied for this post");
+    }
+
     const {user, post} = await getParticipantAndPost(uid, postId);
 
 
@@ -64,6 +71,13 @@ export const deletePostApplication = functions.https.onCall(async (data, context
     if (!postId) {
       throw new functions.https
           .HttpsError("not-found", "Cannot find post Id");
+    }
+
+    const participant = await db.postParticipants(postId).doc(uid).get();
+
+    if (!participant.exists) {
+      throw new functions.https
+          .HttpsError("already-exists", "Cannot find post application");
     }
 
     const {post} = await getParticipantAndPost(uid, postId);

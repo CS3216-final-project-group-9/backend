@@ -4,6 +4,7 @@ import {User} from "../type/user";
 import {parseUserFromFirestore,
   parseUserToFirestore} from "../utils/type-converter";
 import {getPhoto} from "./profilePhoto";
+import {checkUserInfoUnique} from "./checkUserUnique";
 
 export const createUser = functions.https.onCall(async (data, context) => {
   try {
@@ -19,6 +20,20 @@ export const createUser = functions.https.onCall(async (data, context) => {
     }
 
     const newUser = userRaw as User;
+    const {isTeleHandleSame, isUsernameSame} = await checkUserInfoUnique(newUser.telegramHandle, newUser.name);
+    if (isTeleHandleSame && isUsernameSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Telegram handle and user name have been used");
+    }
+    if (isTeleHandleSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "User name has been used");
+    }
+    if (isUsernameSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Telegram handle has been used");
+    }
+
     newUser.id = uid;
     const photos = getPhoto(newUser.gender);
     newUser.thumbnailPhoto = photos[0];
@@ -85,8 +100,32 @@ export const updateUser = functions.https.onCall(async (data, context) => {
           .HttpsError("invalid-argument", "User object cannot be found");
     }
     const updatedUser = userRaw as User;
-    const firebaseUser = parseUserToFirestore(updatedUser);
-    await db.users.doc(uid).set(firebaseUser);
+
+    const {isTeleHandleSame, isUsernameSame} = await checkUserInfoUnique(updatedUser.telegramHandle, updatedUser.name);
+    if (isTeleHandleSame && isUsernameSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Telegram handle and user name have been used");
+    }
+    if (isTeleHandleSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "User name has been used");
+    }
+    if (isUsernameSame) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Telegram handle has been used");
+    }
+
+    await db.users.doc(uid).set(
+        {
+          name: updatedUser.name,
+          gender: updatedUser.gender,
+          faculty: updatedUser.faculty,
+          year: updatedUser.year,
+          telegramHandle: updatedUser.telegramHandle,
+          profilePhoto: updatedUser.profilePhoto,
+          thumbnailPhoto: updatedUser.thumbnailPhoto,
+        },
+        {merge: true});
     return {success: true, message: String("User updated successfully")};
   } catch (e) {
     return {success: false, message: e};
