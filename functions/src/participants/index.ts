@@ -113,9 +113,8 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
       responseStatus: responseRaw} = data;
     const postId = postIdRaw? postIdRaw as string : null;
     const applicantId = userIdRaw? userIdRaw as string : null;
-    const responseStatus = responseRaw?
-    responseRaw as AppliedRequestStatus: null;
-    if (!postId || !applicantId || responseStatus == null) {
+    const responseStatus = responseRaw as AppliedRequestStatus;
+    if (!postId || !applicantId) {
       throw new functions.https
           .HttpsError("invalid-argument", "Not enough argument");
     }
@@ -128,6 +127,17 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     if (uid != postDoc.data()?.posterId) {
       throw new functions.https
           .HttpsError("permission-denied", "User is not post author");
+    }
+
+    const participantDoc = await db.postParticipants(postId).doc(uid).get();
+    const firestoreParticipant = participantDoc.data();
+
+    if (!firestoreParticipant) {
+      throw new functions.https
+          .HttpsError("not-found", "User is not participanting in post");
+    } else if (firestoreParticipant.status != AppliedRequestStatus.PENDING) {
+      throw new functions.https
+          .HttpsError("already-exists", "Already response to user");
     }
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {

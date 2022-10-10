@@ -16,3 +16,4 @@ export async function checkUserInfoUnique(teleHandle :string, username: string) 
   }));
   return {isTeleHandleSame, isUsernameSame};
 }
+
