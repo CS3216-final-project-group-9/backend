@@ -67,10 +67,6 @@ export const hasCreatedUserProfile = functions.https.onCall(async (data, context
 });
 
 
-export const deleteUser = functions.https.onCall((data, context) => {
-  // ...
-});
-
 export const getUser = functions.https.onCall(async (data, context) => {
   try {
     const {userId} = data;

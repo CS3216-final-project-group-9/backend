@@ -22,13 +22,11 @@ export type FirestoreCustomUser = {
     telegramHandle: string
     profilePhoto: string;
     thumbnailPhoto: string;
-    createdPostIds: string[];
-    participatedPostIds: string[];
-    appliedPostIds: string[];
 }
 
 export type FirestoreCustomParticipant = {
     userId: string;
+    postId: string;
     status: AppliedRequestStatus;
 }
 

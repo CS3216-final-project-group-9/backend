@@ -12,9 +12,6 @@ export function parseUserToFirestore(user: User) {
     telegramHandle: user.telegramHandle,
     profilePhoto: user.profilePhoto,
     thumbnailPhoto: user.thumbnailPhoto,
-    createdPostIds: [],
-    participatedPostIds: [],
-    appliedPostIds: [],
   };
   return parsedUser;
 }
