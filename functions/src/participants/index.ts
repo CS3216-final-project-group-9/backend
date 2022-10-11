@@ -129,7 +129,7 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
           .HttpsError("permission-denied", "User is not post author");
     }
 
-    const participantDoc = await db.postParticipants(postId).doc(uid).get();
+    const participantDoc = await db.postParticipants(postId).doc(applicantId).get();
     const firestoreParticipant = participantDoc.data();
 
     if (!firestoreParticipant) {
@@ -141,7 +141,7 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     }
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      await unTypedFirestore.collection("users").doc(uid).set(
+      await unTypedFirestore.collection("users").doc(applicantId).set(
           {participatedPostIds: FieldValue.arrayUnion(postId)},
           {merge: true}
       );
@@ -151,15 +151,11 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     }
 
     const updatedApplication: FirestoreCustomParticipant = {
-      userId: uid,
+      userId: applicantId,
       status: responseStatus,
     };
-    await db.postParticipants(postId).doc(uid).set(updatedApplication);
+    await db.postParticipants(postId).doc(applicantId).set(updatedApplication);
 
-    await unTypedFirestore.collection("users").doc(uid).set(
-        {participatedPostIds: FieldValue.arrayUnion(postId)},
-        {merge: true}
-    );
 
     return {success: true,
       message: "Response to applicant successfully"};

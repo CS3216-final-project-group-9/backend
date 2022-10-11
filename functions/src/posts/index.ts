@@ -197,7 +197,6 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
 
-
     const userDoc = await db.users.doc(uid).get();
     const user = userDoc.data();
     if (!user) {
