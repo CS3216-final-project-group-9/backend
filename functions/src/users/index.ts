@@ -97,20 +97,6 @@ export const updateUser = functions.https.onCall(async (data, context) => {
     }
     const updatedUser = userRaw as User;
 
-    const {isTeleHandleSame, isUsernameSame} = await checkUserInfoUnique(updatedUser.telegramHandle, updatedUser.name);
-    if (isTeleHandleSame && isUsernameSame) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "Telegram handle and user name have been used");
-    }
-    if (isTeleHandleSame) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "User name has been used");
-    }
-    if (isUsernameSame) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "Telegram handle has been used");
-    }
-
     await db.users.doc(uid).set(
         {
           name: updatedUser.name,

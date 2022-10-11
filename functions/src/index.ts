@@ -13,9 +13,7 @@ export const hasCreatedUserProfile = users.hasCreatedUserProfile;
 // Posts
 export const createPost = posts.createPost;
 export const deletePost = posts.deletePost;
-export const updatePost = posts.updatePost;
-export const getPost = posts.getPost;
-export const getAllActivePosts = posts.getAllActivePosts;
+export const getExplorePost = posts.getExplorePost;
 export const getAppliedPosts = posts.getAppliedPosts;
 export const getCreatedPosts = posts.getCreatedPosts;
 

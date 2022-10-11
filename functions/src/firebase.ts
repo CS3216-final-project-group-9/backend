@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import {FirestoreCustomParticipant,
+import {FirestoreCustomApplicant,
   FirestoreCustomPost,
   FirestoreCustomUser,
   FirestoreMail} from "./type/firebase-type";
@@ -25,7 +25,7 @@ const db = {
   // list your collections here
   users: dataPoint<FirestoreCustomUser>("users"),
   posts: dataPoint<FirestoreCustomPost>("posts"),
-  postParticipants: (postId: string) =>dataPoint<FirestoreCustomParticipant>(`posts/${postId}/participants`),
+  applicants: dataPoint<FirestoreCustomApplicant>("applicants"),
   mail: dataPoint<FirestoreMail>("mail"),
 };
 

@@ -24,10 +24,11 @@ export type FirestoreCustomUser = {
     thumbnailPhoto: string;
 }
 
-export type FirestoreCustomParticipant = {
+export type FirestoreCustomApplicant = {
     userId: string;
     postId: string;
     status: AppliedRequestStatus;
+    updatedTime: Date;
 }
 
 export type FirestoreCustomPost = {

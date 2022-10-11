@@ -1,8 +1,7 @@
 import * as functions from "firebase-functions";
 import {db, unTypedFirestore} from "../firebase";
-import {FirestoreCustomParticipant} from "../type/firebase-type";
+import {FirestoreCustomApplicant} from "../type/firebase-type";
 import {AppliedRequestStatus} from "../type/postApplication";
-import {FieldValue} from "firebase-admin/firestore";
 import {notifyApplicantSessionApplied, notifyParticipantHostAccepted, notifyParticipantHostCancelled, notifyPosterApplicantCancelled, notifyPosterHasNewApplicant} from "../utils/email";
 import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
@@ -22,9 +21,9 @@ export const createPostApplication = functions.https.onCall(async (data, context
           .HttpsError("invalid-argument", "Post Id argument not provided");
     }
 
-    const participant = await db.postParticipants(postId).doc(uid).get();
+    const participant = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
 
-    if (participant.exists) {
+    if (participant.size > 0) {
       throw new functions.https
           .HttpsError("already-exists", "User already applied for this post");
     }
@@ -32,19 +31,14 @@ export const createPostApplication = functions.https.onCall(async (data, context
     const {user, post} = await getParticipantAndPost(uid, postId);
 
 
-    const newApplication: FirestoreCustomParticipant = {
+    const newApplication: FirestoreCustomApplicant = {
       userId: uid,
       status: AppliedRequestStatus.PENDING,
+      postId: postId,
+      updatedTime: new Date(),
     };
     // Add post application
-    await db.postParticipants(postId).doc(uid).set(newApplication);
-
-    // Add post to user profile
-    await unTypedFirestore.collection("users").doc(uid).set(
-        {appliedPostIds: FieldValue.arrayUnion(postId)},
-        {merge: true}
-    );
-
+    await db.applicants.doc().set(newApplication);
 
     // Email notifications
     await notifyPosterHasNewApplicant(post);
@@ -73,28 +67,29 @@ export const deletePostApplication = functions.https.onCall(async (data, context
           .HttpsError("not-found", "Cannot find post Id");
     }
 
-    const participant = await db.postParticipants(postId).doc(uid).get();
+    const participant = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
 
-    if (!participant.exists) {
+    if (participant.size > 0) {
       throw new functions.https
-          .HttpsError("already-exists", "Cannot find post application");
+          .HttpsError("already-exists", "User already applied for this post");
     }
 
-    const {post} = await getParticipantAndPost(uid, postId);
+    const application = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
 
+    const batch = unTypedFirestore.batch();
 
-    await unTypedFirestore.collection("users").doc(uid).set(
-        {appliedPostIds: FieldValue.arrayRemove(postId)},
-        {merge: true}
-    );
-    await db.postParticipants(postId).doc(uid).delete();
+    application.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
 
     // Email notification
+    const {post} = await getParticipantAndPost(uid, postId);
     await notifyPosterApplicantCancelled(post);
 
 
-    return {success: true,
-      message: "Delete application to post successfully"};
+    return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
     return {success: false, message: e};
   }
@@ -129,32 +124,31 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
           .HttpsError("permission-denied", "User is not post author");
     }
 
-    const participantDoc = await db.postParticipants(postId).doc(applicantId).get();
-    const firestoreParticipant = participantDoc.data();
+    const applicationDoc = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
 
-    if (!firestoreParticipant) {
+    if (applicationDoc.size == 0) {
       throw new functions.https
           .HttpsError("not-found", "User is not participanting in post");
-    } else if (firestoreParticipant.status != AppliedRequestStatus.PENDING) {
-      throw new functions.https
-          .HttpsError("already-exists", "Already response to user");
     }
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      await unTypedFirestore.collection("users").doc(applicantId).set(
-          {participatedPostIds: FieldValue.arrayUnion(postId)},
-          {merge: true}
-      );
       await notifyParticipantHostAccepted(post, participant);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
     }
 
-    const updatedApplication: FirestoreCustomParticipant = {
-      userId: applicantId,
-      status: responseStatus,
-    };
-    await db.postParticipants(postId).doc(applicantId).set(updatedApplication);
+
+    const batch = unTypedFirestore.batch();
+    applicationDoc.forEach((doc) => {
+      batch.set(doc.ref, {
+        userId: applicantId,
+        postId: postId,
+        status: responseStatus,
+        updatedTime: new Date(),
+      });
+    });
+
+    await batch.commit();
 
 
     return {success: true,

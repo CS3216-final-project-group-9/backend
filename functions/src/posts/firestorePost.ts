@@ -44,19 +44,14 @@ export async function getPostFromFirestorePost(firestorePost: FirestoreCustomPos
   }
   const participants: FirestoreCustomUser[] = [];
 
-  const firestoreApplicants = await db.postParticipants(firestorePost.id).get();
+  const firestoreParticipantsDoc = await db.applicants
+      .where("posterId", "==", firestorePost.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
 
-  await Promise.all(firestoreApplicants.docs.map(async (firestoreApplicant) => {
-    const applicant = firestoreApplicant.data();
-    if (applicant.status == AppliedRequestStatus.ACCEPTED) {
-      const user = await db.users.doc(applicant.userId).get();
-      const docData = user.data();
-      if (!docData) {
-        throw new functions.https
-            .HttpsError("aborted", "Cannot fetch user data");
-      }
-      participants.push(docData);
-    }
+  await Promise.all(firestoreParticipantsDoc.docs.map(async (participantDoc) => {
+    const participant = participantDoc.data();
+    const user = await db.users.doc(participant.userId).get();
+    const docData = user.data();
+    if (docData) participants.push(docData);
   }));
   return parsePostFromFirestore(firestorePost, poster, participants);
 }
