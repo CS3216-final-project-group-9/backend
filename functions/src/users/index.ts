@@ -42,6 +42,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
     await db.users.doc(uid).create(firebaseUser);
     return {success: true, message: String("New user created successfully")};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -62,6 +63,7 @@ export const hasCreatedUserProfile = functions.https.onCall(async (data, context
       return {success: true, hasCreatedUserProfile: false};
     }
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -79,6 +81,7 @@ export const getUser = functions.https.onCall(async (data, context) => {
     const parsedUser = parseUserFromFirestore(user);
     return {success: true, message: parsedUser};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -110,6 +113,7 @@ export const updateUser = functions.https.onCall(async (data, context) => {
         {merge: true});
     return {success: true, message: String("User updated successfully")};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -130,6 +134,7 @@ export const getCurrentUser = functions.https.onCall(async (data, context) => {
     const parsedUser = parseUserFromFirestore(user);
     return {success: true, message: parsedUser};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });

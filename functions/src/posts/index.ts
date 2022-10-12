@@ -62,6 +62,7 @@ export const createPost = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: "Post created successfully"};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -108,6 +109,7 @@ export const deletePost = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -150,6 +152,7 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: posts};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -181,6 +184,7 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
 
     return {success: true, message: appliedRequests};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -223,7 +227,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: createdRequests};
   } catch (e) {
-    console.log(e)
+    console.error(e);
     return {success: false, message: e};
   }
 });

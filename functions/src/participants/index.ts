@@ -47,6 +47,7 @@ export const createPostApplication = functions.https.onCall(async (data, context
 
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 }
@@ -67,30 +68,18 @@ export const deletePostApplication = functions.https.onCall(async (data, context
           .HttpsError("not-found", "Cannot find post Id");
     }
 
-    const participant = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
-
-    if (participant.size > 0) {
-      throw new functions.https
-          .HttpsError("already-exists", "User already applied for this post");
-    }
-
-    const application = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
-
+    const participants = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
     const batch = unTypedFirestore.batch();
 
-    application.forEach((doc) => {
+    participants.forEach((doc) => {
       batch.delete(doc.ref);
     });
-
     await batch.commit();
-
-    // Email notification
     const {post} = await getParticipantAndPost(uid, postId);
     await notifyPosterApplicantCancelled(post);
-
-
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -124,7 +113,7 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
           .HttpsError("permission-denied", "User is not post author");
     }
 
-    const applicationDoc = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
+    const applicationDoc = await db.applicants.where("postId", "==", postId).where("userId", "==", applicantId).get();
 
     if (applicationDoc.size == 0) {
       throw new functions.https
@@ -154,6 +143,7 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     return {success: true,
       message: "Response to applicant successfully"};
   } catch (e) {
+    console.error(e);
     return {success: false, message: e};
   }
 });
@@ -165,7 +155,6 @@ async function getParticipantAndPost(userId:string, postId: string) {
     throw new functions.https
         .HttpsError("not-found", "Could not find post");
   }
-
   const userDoc = await db.users.doc(userId).get();
   const firestoreUser = userDoc.data();
   if (!firestoreUser) {
