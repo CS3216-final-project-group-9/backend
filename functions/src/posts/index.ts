@@ -163,15 +163,7 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
           .HttpsError("unauthenticated", "User ID cannot be determined");
     }
 
-    const {page: pageRaw} = data;
-    const page = pageRaw ? pageRaw as number: null;
-    if (!page) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "Page is not provided");
-    }
-
-    const applicants = await db.applicants.where("userId", "==", uid)
-        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+    const applicants = await db.applicants.where("userId", "==", uid).get();
 
     const appliedRequests: AppliedRequest[] = [];
     await Promise.all(applicants.docs.map( async (applicantDoc) => {
@@ -207,16 +199,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
           .HttpsError("not-found", "Cannot fetch user data");
     }
 
-    const {page: pageRaw} = data;
-    const page = pageRaw ? pageRaw as number: null;
-    if (!page) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "Page is not provided");
-    }
-
-    const firestorePosts= await db.posts.where("posterId", "==", uid)
-        .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-
+    const firestorePosts= await db.posts.where("posterId", "==", uid).get();
     const createdRequests: CreatedRequest[] = [];
     await Promise.all(firestorePosts.docs.map( async (postDoc) => {
       const firestorePost = postDoc.data();
@@ -224,7 +207,6 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
 
       const participantsDoc = await db.applicants
           .where("postId", "==", firestorePost.id).where("status", "==", AppliedRequestStatus.PENDING).get();
-
       const applicants: User[] = [];
       await Promise.all(participantsDoc.docs.map(async (participantDoc) => {
         const applicant = participantDoc.data();
@@ -232,6 +214,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
         const app = applicantDoc.data();
         if (app) applicants.push(parseUserFromFirestore(app));
       }));
+
       createdRequests.push({
         post: post,
         applicants: applicants,
@@ -240,6 +223,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
 
     return {success: true, message: createdRequests};
   } catch (e) {
+    console.log(e)
     return {success: false, message: e};
   }
 });
