@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import {db} from "../firebase";
+import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost} from "../type/firebase-type";
 import {Post, PostLocation} from "../type/post";
 import {
@@ -92,6 +92,15 @@ export const deletePost = functions.https.onCall(async (data, context) => {
 
     await db.posts.doc(postId).delete();
 
+    const applicantDoc = await db.applicants.where("postId", "==", postId).get();
+    const batch = unTypedFirestore.batch();
+
+    applicantDoc.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+
     // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
     await notifyParticipantsHostCancelled(post);
@@ -122,10 +131,10 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
     let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
     if (uid) {
       if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("posterId", "!=", uid)
+        postSnapshot = await db.posts.orderBy("startDateTime")
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       } else {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("posterId", "!=", uid).where("location", "in", location)
+        postSnapshot = await db.posts.orderBy("startDateTime").where("location", "in", location)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       }
     } else {
@@ -161,7 +170,7 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
           .HttpsError("invalid-argument", "Page is not provided");
     }
 
-    const applicants = await db.applicants.where("userId", "==", uid).orderBy("updatedTime")
+    const applicants = await db.applicants.where("userId", "==", uid)
         .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
 
     const appliedRequests: AppliedRequest[] = [];
@@ -205,7 +214,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
           .HttpsError("invalid-argument", "Page is not provided");
     }
 
-    const firestorePosts= await db.posts.where("posterId", "==", uid).orderBy("startDateTime")
+    const firestorePosts= await db.posts.where("posterId", "==", uid)
         .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
 
     const createdRequests: CreatedRequest[] = [];
