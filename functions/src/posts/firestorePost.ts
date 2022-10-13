@@ -53,7 +53,7 @@ export async function getPostWithAllApplicants(firestorePost: FirestoreCustomPos
   const participants: FirestoreCustomUser[] = [];
 
   const firestoreParticipantsDoc = await db.applicants
-      .where("posterId", "==", firestorePost.id).get();
+      .where("postId", "==", firestorePost.id).get();
   const applicants: User[] = [];
   await Promise.all(firestoreParticipantsDoc.docs.map(async (participantDoc) => {
     const participant = participantDoc.data();

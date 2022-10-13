@@ -114,27 +114,34 @@ export const deletePost = functions.https.onCall(async (data, context) => {
 
     await db.posts.doc(postId).delete();
 
-    const applicantDoc = await db.applicants.where("postId", "==", postId).get();
-    const applicants: User[] = [];
-    await Promise.all(applicantDoc.docs.map(async (applicantDoc) => {
+    const emailedApplicantDoc = await db.applicants.where("postId", "==", postId)
+    .where("status",'in',[AppliedRequestStatus.ACCEPTED,AppliedRequestStatus.PENDING])
+    .get();
+   
+    const emailedApplicants: User[] = [];
+    await Promise.all(emailedApplicantDoc.docs.map(async (applicantDoc) => {
       const applicant = applicantDoc.data();
       const user = await db.users.doc(applicant.userId).get();
       const docData = user.data();
       if (docData) {
-        applicants.push(parseUserFromFirestore(docData));
+        emailedApplicants.push(parseUserFromFirestore(docData));
       }
     }));
     const batch = unTypedFirestore.batch();
+
+    const applicantDoc = await db.applicants.where("postId", "==", postId).get();
 
     applicantDoc.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
+
+
     await batch.commit();
 
     // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
-    await notifyParticipantsHostCancelled(post, applicants);
+    await notifyParticipantsHostCancelled(post, emailedApplicants);
 
 
     return {success: true, message: "Post deleted successfully"};
