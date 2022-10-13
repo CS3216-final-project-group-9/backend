@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import {db, unTypedFirestore} from "../firebase";
-import {FirestoreCustomApplicant} from "../type/firebase-type";
+import {FirestoreCustomApplicant, FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
 import {AppliedRequestStatus} from "../type/postApplication";
 import {notifyApplicantSessionApplied, notifyParticipantHostAccepted, notifyParticipantHostCancelled, notifyPosterApplicantCancelled, notifyPosterHasNewApplicant} from "../utils/email";
 import {parseUserFromFirestore} from "../utils/type-converter";
@@ -29,6 +29,10 @@ export const createPostApplication = functions.https.onCall(async (data, context
     }
 
     const {user, post} = await getParticipantAndPost(uid, postId);
+    if (post.poster.id === uid) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "User is post creator");
+    }
 
 
     const newApplication: FirestoreCustomApplicant = {
@@ -39,12 +43,9 @@ export const createPostApplication = functions.https.onCall(async (data, context
     };
     // Add post application
     await db.applicants.doc().set(newApplication);
-
     // Email notifications
-    await notifyPosterHasNewApplicant(post);
-    await notifyApplicantSessionApplied(post, user);
-
-
+    const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user)];
+    await Promise.all(promises);
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
     console.error(e);
@@ -67,15 +68,18 @@ export const deletePostApplication = functions.https.onCall(async (data, context
       throw new functions.https
           .HttpsError("not-found", "Cannot find post Id");
     }
-
+    const {post} = await getParticipantAndPost(uid, postId);
     const participants = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
+    if (participants.size !== 1) {
+      throw new functions.https
+          .HttpsError("not-found", "Cannot find post application");
+    }
     const batch = unTypedFirestore.batch();
 
     participants.forEach((doc) => {
       batch.delete(doc.ref);
     });
     await batch.commit();
-    const {post} = await getParticipantAndPost(uid, postId);
     await notifyPosterApplicantCancelled(post);
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
@@ -104,8 +108,6 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
     }
 
     const {user: participant, post} = await getParticipantAndPost(applicantId, postId);
-
-
     const postDoc = await db.posts.doc(postId).get();
 
     if (uid != postDoc.data()?.posterId) {
@@ -113,33 +115,26 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
           .HttpsError("permission-denied", "User is not post author");
     }
 
-    const applicationDoc = await db.applicants.where("postId", "==", postId).where("userId", "==", applicantId).get();
+    const applicationQuery = await db.applicants.where("postId", "==", postId).where("userId", "==", applicantId).get();
 
-    if (applicationDoc.size == 0) {
+    if (applicationQuery.size !== 1) {
       throw new functions.https
           .HttpsError("not-found", "User is not participanting in post");
     }
+    const applicationDoc = applicationQuery.docs[0];
+    if (applicationDoc.data().status === responseStatus) {
+      throw new functions.https
+          .HttpsError("not-found", "No change in status");
+    }
+    await applicationDoc.ref.update({
+      status: responseStatus,
+    });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
       await notifyParticipantHostAccepted(post, participant);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
     }
-
-
-    const batch = unTypedFirestore.batch();
-    applicationDoc.forEach((doc) => {
-      batch.set(doc.ref, {
-        userId: applicantId,
-        postId: postId,
-        status: responseStatus,
-        updatedTime: new Date(),
-      });
-    });
-
-    await batch.commit();
-
-
     return {success: true,
       message: "Response to applicant successfully"};
   } catch (e) {
@@ -149,14 +144,21 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
 });
 
 async function getParticipantAndPost(userId:string, postId: string) {
-  const postDoc = await db.posts.doc(postId).get();
-  const firestorePost = postDoc.data();
+  const promises = [db.posts.doc(postId).get(), db.users.doc(userId).get()];
+  const docs = await Promise.all(promises);
+  const postDoc = docs[0];
+  const userDoc = docs[1];
+  if (!postDoc.exists || !userDoc.exists) {
+    throw new functions.https
+        .HttpsError("not-found", "Could not find post or user");
+  }
+  const firestorePost = postDoc.data() as FirestoreCustomPost;
   if (!firestorePost) {
     throw new functions.https
         .HttpsError("not-found", "Could not find post");
   }
-  const userDoc = await db.users.doc(userId).get();
-  const firestoreUser = userDoc.data();
+
+  const firestoreUser = userDoc.data() as FirestoreCustomUser;
   if (!firestoreUser) {
     throw new functions.https
         .HttpsError("not-found", "Could not find user");

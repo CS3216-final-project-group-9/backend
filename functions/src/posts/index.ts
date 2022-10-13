@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import moment = require("moment-timezone");
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost} from "../type/firebase-type";
 import {Post, PostLocation} from "../type/post";
@@ -44,16 +45,31 @@ export const createPost = functions.https.onCall(async (data, context) => {
     }
     const ref = db.posts.doc();
     const docId = ref.id;
+    const startDate = moment(postRaw.startDateTime).toDate();
+    const endDate = moment(postRaw.endDateTime).toDate();
 
     const newPost: Post = {
       id: docId,
       poster: user,
-      startDateTime: postRaw.startDateTime as Date,
-      endDateTime: postRaw.endDateTime as Date,
+      startDateTime: startDate,
+      endDateTime: endDate,
       participants: [],
       location: postRaw.location as PostLocation,
       description: postRaw.description as string,
     };
+
+    const momentStart = moment(newPost.startDateTime);
+    const momentEnd = moment(newPost.endDateTime);
+    const momentNow = moment();
+    if (momentStart.isBefore(momentNow)) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Start time must be in the future");
+    }
+    if (momentStart.isAfter(momentEnd)) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Start time must be before end time");
+    }
+
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
 
@@ -131,24 +147,25 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
 
     const uid = context.auth?.uid;
     let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
+    const date = new Date();
     if (uid) {
       if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("startDateTime")
+        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       } else {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("location", "in", location)
+        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).where("location", "in", location)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       }
     } else {
       if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("startDateTime").startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       } else {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("location", "in", location)
+        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).where("location", "in", location)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       }
     }
 
-    const posts = await getPostsFromSnapshot(postSnapshot);
+    const posts = await (await getPostsFromSnapshot(postSnapshot, uid?? "")).filter((post) => post.poster.id !== uid);
 
     return {success: true, message: posts};
   } catch (e) {
@@ -175,14 +192,20 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
       const firestorePost =postDoc.data();
       if (firestorePost) {
         const post = await getPostFromFirestorePost(firestorePost);
-        appliedRequests.push({
-          status: applicant.status,
-          post: post,
-        });
+        const todayDate = moment();
+        const isOver = moment(post.startDateTime).isAfter(todayDate, "day");
+        if (!isOver) {
+          appliedRequests.push({
+            status: applicant.status,
+            post: post,
+          });
+        }
       }
     }));
 
-    return {success: true, message: appliedRequests};
+    // Accepted first, pending second, normal third
+    const sorted = appliedRequests.sort((a, b) => a.status - b.status);
+    return {success: true, message: sorted};
   } catch (e) {
     console.error(e);
     return {success: false, message: e};
@@ -202,8 +225,9 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
       throw new functions.https
           .HttpsError("not-found", "Cannot fetch user data");
     }
+    const todayDate = moment().startOf("day");
 
-    const firestorePosts= await db.posts.where("posterId", "==", uid).get();
+    const firestorePosts= await db.posts.where("posterId", "==", uid).where("startDateTime", ">=", todayDate).get();
     const createdRequests: CreatedRequest[] = [];
     await Promise.all(firestorePosts.docs.map( async (postDoc) => {
       const firestorePost = postDoc.data();
@@ -224,8 +248,11 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
         applicants: applicants,
       });
     }));
-
-    return {success: true, message: createdRequests};
+    // those with most number of applicants will show first
+    const sorted = createdRequests.sort((a, b) => {
+      return b.applicants.length - a.applicants.length;
+    });
+    return {success: true, message: sorted};
   } catch (e) {
     console.error(e);
     return {success: false, message: e};
