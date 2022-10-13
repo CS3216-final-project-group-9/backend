@@ -58,6 +58,11 @@ export const createPost = functions.https.onCall(async (data, context) => {
       description: postRaw.description as string,
     };
 
+    if (newPost.description.length > 200) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Description is too long");
+    }
+
     const momentStart = moment(newPost.startDateTime);
     const momentEnd = moment(newPost.endDateTime);
     const momentNow = moment();
@@ -110,6 +115,15 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     await db.posts.doc(postId).delete();
 
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
+    const applicants: User[] = [];
+    await Promise.all(applicantDoc.docs.map(async (applicantDoc) => {
+      const applicant = applicantDoc.data();
+      const user = await db.users.doc(applicant.userId).get();
+      const docData = user.data();
+      if (docData) {
+        applicants.push(parseUserFromFirestore(docData));
+      }
+    }));
     const batch = unTypedFirestore.batch();
 
     applicantDoc.forEach((doc) => {
@@ -120,7 +134,7 @@ export const deletePost = functions.https.onCall(async (data, context) => {
 
     // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
-    await notifyParticipantsHostCancelled(post);
+    await notifyParticipantsHostCancelled(post, applicants);
 
 
     return {success: true, message: "Post deleted successfully"};

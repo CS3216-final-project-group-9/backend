@@ -80,7 +80,7 @@ export async function getPostFromFirestorePost(firestorePost: FirestoreCustomPos
   const participants: FirestoreCustomUser[] = [];
 
   const firestoreParticipantsDoc = await db.applicants
-      .where("posterId", "==", firestorePost.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
+      .where("postId", "==", firestorePost.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
 
   await Promise.all(firestoreParticipantsDoc.docs.map(async (participantDoc) => {
     const participant = participantDoc.data();
