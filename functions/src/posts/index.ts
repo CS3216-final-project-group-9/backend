@@ -210,8 +210,8 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
       if (firestorePost) {
         const post = await getPostFromFirestorePost(firestorePost);
         const todayDate = moment();
-        const isOver = moment(post.startDateTime).isAfter(todayDate, "day");
-        if (!isOver) {
+        const isBefore = moment(post.startDateTime).isBefore(todayDate, "day");
+        if (!isBefore) {
           appliedRequests.push({
             status: applicant.status,
             post: post,
