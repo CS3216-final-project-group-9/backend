@@ -6,7 +6,6 @@ import {AppliedRequestStatus} from "../type/postApplication";
 import {Post} from "../type/post";
 import {User} from "../type/user";
 
-
 export async function getAllPostsFromFirestorePosts(firestorePosts:FirestoreCustomPost[]) {
   const posts: Post[] = [];
   await Promise.all(firestorePosts.map( async (firestorePost) => {

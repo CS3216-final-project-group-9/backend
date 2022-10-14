@@ -45,14 +45,12 @@ export const createPost = functions.https.onCall(async (data, context) => {
     }
     const ref = db.posts.doc();
     const docId = ref.id;
-    const startDate = moment(postRaw.startDateTime).toDate();
-    const endDate = moment(postRaw.endDateTime).toDate();
 
     const newPost: Post = {
       id: docId,
       poster: user,
-      startDateTime: startDate,
-      endDateTime: endDate,
+      startDateTime: postRaw.startDateTime,
+      endDateTime: postRaw.endDateTime,
       participants: [],
       location: postRaw.location as PostLocation,
       description: postRaw.description as string,
@@ -186,7 +184,6 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
     }
 
     const posts = await (await getPostsFromSnapshot(postSnapshot, uid?? "")).filter((post) => post.poster.id !== uid);
-
     return {success: true, message: posts};
   } catch (e) {
     console.error(e);

@@ -7,8 +7,8 @@ import {User} from "./user";
 export type Post = {
   id: string;
   poster: User
-  startDateTime: Date;
-  endDateTime: Date;
+  startDateTime: string;
+  endDateTime: string;
   /** List of users who have been confirmed to be going for the post event */
   participants: User[];
   location: PostLocation;

@@ -1,6 +1,7 @@
 import {FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
 import {User} from "../type/user";
 import {Post} from "../type/post";
+import moment = require("moment");
 
 export function parseUserToFirestore(user: User) {
   const parsedUser: FirestoreCustomUser = {
@@ -31,10 +32,13 @@ export function parseUserFromFirestore(firestoreUser: FirestoreCustomUser) {
 }
 
 export function parsePostToFirestore(post: Post) {
+  const startDate = moment(post.startDateTime).toDate();
+  const endDate = moment(post.endDateTime).toDate();
+
   const parsedPost: FirestoreCustomPost = {
     posterId: post.poster.id,
-    startDateTime: post.startDateTime,
-    endDateTime: post.endDateTime,
+    startDateTime: startDate,
+    endDateTime: endDate,
     location: post.location,
     id: post.id,
     description: post.description,
@@ -50,8 +54,8 @@ export function parsePostFromFirestore(
     id: firestorePost.id,
     description: firestorePost.description,
     poster: parseUserFromFirestore(firestorePoster),
-    startDateTime: firestorePost.startDateTime,
-    endDateTime: firestorePost.endDateTime,
+    startDateTime: (firestorePost.startDateTime as any).toDate().toISOString(),
+    endDateTime: (firestorePost.endDateTime as any).toDate().toISOString(),
     participants: Array.from(firestoreParticipants, (participant) => {
       return parseUserFromFirestore(participant);
     }),
