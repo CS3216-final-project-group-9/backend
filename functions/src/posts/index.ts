@@ -115,9 +115,9 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     await db.posts.doc(postId).delete();
 
     const emailedApplicantDoc = await db.applicants.where("postId", "==", postId)
-    .where("status",'in',[AppliedRequestStatus.ACCEPTED,AppliedRequestStatus.PENDING])
-    .get();
-   
+        .where("status", "in", [AppliedRequestStatus.ACCEPTED, AppliedRequestStatus.PENDING])
+        .get();
+
     const emailedApplicants: User[] = [];
     await Promise.all(emailedApplicantDoc.docs.map(async (applicantDoc) => {
       const applicant = applicantDoc.data();
@@ -134,7 +134,6 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     applicantDoc.forEach((doc) => {
       batch.delete(doc.ref);
     });
-
 
 
     await batch.commit();
