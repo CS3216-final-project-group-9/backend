@@ -5,6 +5,7 @@ import {AppliedRequestStatus} from "../type/postApplication";
 import {notifyApplicantSessionApplied, notifyParticipantHostAccepted, notifyParticipantHostCancelled, notifyPosterApplicantCancelled, notifyPosterHasNewApplicant} from "../utils/email";
 import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
+import {HttpsError} from "firebase-functions/v1/https";
 
 export const createPostApplication = functions.https.onCall(async (data, context) => {
   try {
@@ -49,6 +50,7 @@ export const createPostApplication = functions.https.onCall(async (data, context
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 }
@@ -84,6 +86,7 @@ export const deletePostApplication = functions.https.onCall(async (data, context
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -139,6 +142,7 @@ export const responsePostApplication = functions.https.onCall(async (data, conte
       message: "Response to applicant successfully"};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });

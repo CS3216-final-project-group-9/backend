@@ -5,6 +5,7 @@ import {parseUserFromFirestore,
   parseUserToFirestore} from "../utils/type-converter";
 import {getPhoto} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
+import {HttpsError} from "firebase-functions/v1/https";
 
 export const createUser = functions.https.onCall(async (data, context) => {
   try {
@@ -43,6 +44,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
     return {success: true, message: String("New user created successfully")};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -64,6 +66,7 @@ export const hasCreatedUserProfile = functions.https.onCall(async (data, context
     }
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -82,6 +85,7 @@ export const getUser = functions.https.onCall(async (data, context) => {
     return {success: true, message: parsedUser};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -114,6 +118,7 @@ export const updateUser = functions.https.onCall(async (data, context) => {
     return {success: true, message: String("User updated successfully")};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -135,6 +140,7 @@ export const getCurrentUser = functions.https.onCall(async (data, context) => {
     return {success: true, message: parsedUser};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });

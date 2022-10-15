@@ -1,4 +1,5 @@
 import * as functions from "firebase-functions";
+import {HttpsError} from "firebase-functions/v1/https";
 import moment = require("moment-timezone");
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost} from "../type/firebase-type";
@@ -45,6 +46,13 @@ export const createPost = functions.https.onCall(async (data, context) => {
     }
     const ref = db.posts.doc();
     const docId = ref.id;
+    const fortnightAway = new Date(Date.now() + 12096e5);
+    const startDate = moment(postRaw.startDateTime).toDate();
+
+    if (startDate >= fortnightAway) {
+      throw new functions.https
+          .HttpsError("invalid-argument", "Date is more than 14 days away from now");
+    }
 
     const newPost: Post = {
       id: docId,
@@ -82,6 +90,7 @@ export const createPost = functions.https.onCall(async (data, context) => {
     return {success: true, message: "Post created successfully"};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -144,6 +153,7 @@ export const deletePost = functions.https.onCall(async (data, context) => {
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -187,6 +197,7 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
     return {success: true, message: posts};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -225,6 +236,7 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
     return {success: true, message: sorted};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
@@ -272,6 +284,7 @@ export const getCreatedPosts = functions.https.onCall(async (data, context) => {
     return {success: true, message: sorted};
   } catch (e) {
     console.error(e);
+    if (e instanceof HttpsError) return {success: false, message: e.message};
     return {success: false, message: e};
   }
 });
