@@ -34,7 +34,7 @@ export const createPost = functions.https.onCall(async (data, context) => {
     const firestoreUser = userDoc.data();
     if (!firestoreUser) {
       throw new functions.https
-          .HttpsError("not-found", "User not found in database");
+          .HttpsError("not-found", "User profile not found");
     }
     const user = parseUserFromFirestore(firestoreUser);
 
@@ -42,7 +42,7 @@ export const createPost = functions.https.onCall(async (data, context) => {
 
     if (!postRaw) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Post Object is not provided");
+          .HttpsError("invalid-argument", "Post object is not provided");
     }
     const ref = db.posts.doc();
     const docId = ref.id;

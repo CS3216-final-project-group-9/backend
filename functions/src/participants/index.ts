@@ -19,7 +19,7 @@ export const createPostApplication = functions.https.onCall(async (data, context
     const postId = postIdRaw? postIdRaw as string : null;
     if (!postId) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Post Id argument not provided");
+          .HttpsError("invalid-argument", "Post Id not provided");
     }
 
     const participant = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
