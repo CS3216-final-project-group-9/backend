@@ -19,23 +19,22 @@ import {
   getPostsFromSnapshot,
   getPostFromFirestorePost,
 } from "./firestorePost";
+import * as CustomErrorCode from "../utils/errorCode";
+
 
 const POST_PER_PAGE = 20;
 
 export const createPost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
-
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
 
     const userDoc = await db.users.doc(uid).get();
     const firestoreUser = userDoc.data();
     if (!firestoreUser) {
-      throw new functions.https
-          .HttpsError("not-found", "User profile not found");
+      throw new functions.https.HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
     }
     const user = parseUserFromFirestore(firestoreUser);
 
@@ -43,7 +42,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     if (!postRaw) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Post object is not provided");
+          .HttpsError("invalid-argument", CustomErrorCode.POST_OBJECT_INPUT_NOT_FOUND);
     }
     const ref = db.posts.doc();
     const docId = ref.id;
@@ -52,7 +51,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     if (startDate >= fortnightAway) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Date is more than 14 days away from now");
+          .HttpsError("invalid-argument", CustomErrorCode.DATE_MORE_THAN_14_FROM_NOW);
     }
 
     const newPost: Post = {
@@ -67,7 +66,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     if (newPost.description.length > 200) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Description is too long");
+          .HttpsError("invalid-argument", CustomErrorCode.DESCRIPTION_TOO_LONG);
     }
 
     const momentNow = moment();
@@ -75,11 +74,11 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
     const momentStart = moment(newPost.startDateTime);
     if (momentStart.isBefore(momentNow)) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Start time must be in the future");
+          .HttpsError("invalid-argument", CustomErrorCode.START_TIME_NOT_FUTURE);
     }
     if (momentStart.isAfter(momentEnd)) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Start time must be before end time");
+          .HttpsError("invalid-argument", CustomErrorCode.START_TIME_AFTER_END_TIME);
     }
 
     const parsedPost = parsePostToFirestore(newPost);
@@ -100,24 +99,24 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
+
     const postId = data.postId as string;
     if (!postId) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Post Id not provided");
+          .HttpsError("invalid-argument", CustomErrorCode.POST_ID_INPUT_NOT_FOUND);
     }
     const postDoc = await db.posts.doc(postId).get();
     const firestorePost = postDoc.data();
 
     if (!firestorePost) {
-      throw new functions.https.HttpsError("not-found", "Post not found");
+      throw new functions.https.HttpsError("not-found", CustomErrorCode.POST_NOT_IN_DB);
     }
 
     if (uid != firestorePost.posterId) {
       throw new functions.https
-          .HttpsError("permission-denied", "User is not post author");
+          .HttpsError("permission-denied", CustomErrorCode.USER_NOT_POST_AUTHOR);
     }
 
     await db.posts.doc(postId).delete();
@@ -167,11 +166,11 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
 
     if (!page) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Page is not provided");
+          .HttpsError("invalid-argument", CustomErrorCode.PAGE_INPUT_NOT_FOUND);
     }
     if (!location) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Location is not provided");
+          .HttpsError("invalid-argument", CustomErrorCode.LOCATION_INPUT_NOT_FOUND);
     }
 
     const uid = context.auth?.uid;
@@ -208,8 +207,7 @@ export const getAppliedPosts = functions.region("asia-southeast2").https.onCall(
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
 
     const applicants = await db.applicants.where("userId", "==", uid).get();
@@ -246,14 +244,13 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
     const userDoc = await db.users.doc(uid).get();
     const user = userDoc.data();
     if (!user) {
       throw new functions.https
-          .HttpsError("not-found", "Cannot fetch user data");
+          .HttpsError("not-found", CustomErrorCode.CURRENT_USER_PROFILE_NOT_IN_DB);
     }
     const todayDate = moment().startOf("day");
 

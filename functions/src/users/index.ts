@@ -6,33 +6,34 @@ import {parseUserFromFirestore,
 import {getPhoto} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
 import {HttpsError} from "firebase-functions/v1/https";
+import * as CustomErrorCode from "../utils/errorCode";
+
 
 export const createUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
+
     const {user: userRaw} = data;
     if (!userRaw) {
-      throw new functions.https
-          .HttpsError("invalid-argument", "User object cannot be found");
+      throw new functions.https.HttpsError("invalid-argument", CustomErrorCode.USER_NOT_IN_DB);
     }
 
     const newUser = userRaw as User;
     const {isTeleHandleSame, isUsernameSame} = await checkUserInfoUnique(newUser.telegramHandle, newUser.name);
     if (isTeleHandleSame && isUsernameSame) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Telegram handle and user name have been used");
+          .HttpsError("invalid-argument", CustomErrorCode.DUPLICATE_TELE_AND_USERNAME);
     }
     if (isTeleHandleSame) {
       throw new functions.https
-          .HttpsError("invalid-argument", "User name has been used");
+          .HttpsError("invalid-argument", CustomErrorCode.DUPLICATE_USERNAME);
     }
     if (isUsernameSame) {
       throw new functions.https
-          .HttpsError("invalid-argument", "Telegram handle has been used");
+          .HttpsError("invalid-argument", CustomErrorCode.DUPLICATE_TELE);
     }
 
     newUser.id = uid;
@@ -54,9 +55,9 @@ export const hasCreatedUserProfile = functions.region("asia-southeast2").https.o
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
+
     const user = await db.users.doc(uid).get();
 
     if (user.exists) {
@@ -79,7 +80,7 @@ export const getUser = functions.region("asia-southeast2").https.onCall(async (d
     const user = userDoc.data();
     if (!user) {
       throw new functions.https
-          .HttpsError("not-found", "User profile not found");
+          .HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
     }
     const parsedUser = parseUserFromFirestore(user);
     return {success: true, message: parsedUser};
@@ -94,13 +95,14 @@ export const updateUser = functions.region("asia-southeast2").https.onCall(async
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
+
+
     const {user: userRaw} = data;
     if (!userRaw) {
       throw new functions.https
-          .HttpsError("invalid-argument", "User object cannot be found");
+          .HttpsError("invalid-argument", CustomErrorCode.USER_OBJECT_INPUT_NOT_FOUND);
     }
     const updatedUser = userRaw as User;
 
@@ -127,14 +129,14 @@ export const getCurrentUser = functions.region("asia-southeast2").https.onCall(a
   try {
     const uid = context.auth?.uid;
     if (!uid) {
-      throw new functions.https
-          .HttpsError("unauthenticated", "User ID cannot be determined");
+      throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
+
     const userDoc = await db.users.doc(uid).get();
     const user = userDoc.data();
     if (!user) {
       throw new functions.https
-          .HttpsError("not-found", "Current User profile not found");
+          .HttpsError("not-found", CustomErrorCode.CURRENT_USER_PROFILE_NOT_IN_DB);
     }
     const parsedUser = parseUserFromFirestore(user);
     return {success: true, message: parsedUser};

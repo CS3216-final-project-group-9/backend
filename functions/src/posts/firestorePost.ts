@@ -5,6 +5,7 @@ import {parsePostFromFirestore, parseUserFromFirestore} from "../utils/type-conv
 import {AppliedRequestStatus} from "../type/postApplication";
 import {Post} from "../type/post";
 import {User} from "../type/user";
+import * as CustomErrorCode from "../utils/errorCode";
 
 export async function getAllPostsFromFirestorePosts(firestorePosts:FirestoreCustomPost[]) {
   const posts: Post[] = [];
@@ -47,8 +48,7 @@ export async function getPostWithAllApplicants(firestorePost: FirestoreCustomPos
   const posterDoc = await db.users.doc(firestorePost.posterId).get();
   const poster = posterDoc.data();
   if (!poster) {
-    throw new functions.https
-        .HttpsError("aborted", "Cannot fetch user data");
+    throw new functions.https .HttpsError("aborted", CustomErrorCode.POST_AUTHOR_NOT_IN_DB);
   }
   const participants: FirestoreCustomUser[] = [];
 
@@ -74,8 +74,7 @@ export async function getPostFromFirestorePost(firestorePost: FirestoreCustomPos
   const posterDoc = await db.users.doc(firestorePost.posterId).get();
   const poster = posterDoc.data();
   if (!poster) {
-    throw new functions.https
-        .HttpsError("aborted", "Cannot fetch user data");
+    throw new functions.https .HttpsError("aborted", CustomErrorCode.POST_AUTHOR_NOT_IN_DB);
   }
   const participants: FirestoreCustomUser[] = [];
 
