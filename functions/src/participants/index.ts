@@ -7,7 +7,7 @@ import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 
-export const createPostApplication = functions.https.onCall(async (data, context) => {
+export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -56,7 +56,7 @@ export const createPostApplication = functions.https.onCall(async (data, context
 }
 );
 
-export const deletePostApplication = functions.https.onCall(async (data, context) => {
+export const deletePostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -91,7 +91,7 @@ export const deletePostApplication = functions.https.onCall(async (data, context
   }
 });
 
-export const responsePostApplication = functions.https.onCall(async (data, context) => {
+export const responsePostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
