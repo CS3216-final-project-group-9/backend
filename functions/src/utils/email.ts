@@ -1,10 +1,48 @@
-import {db} from "../firebase";
-import {FirestoreMail} from "../type/firebase-type";
 import {Post} from "../type/post";
 import {User} from "../type/user";
 import {getAuth} from "firebase-admin/auth";
 import momentTimezone = require("moment-timezone");
+import AWS = require("aws-sdk");
+import functions = require("firebase-functions");
 
+const config = functions.config();
+
+const awsCredentials =config.aws;
+const {access: accessKeyId, secret: secretAccessKey} = awsCredentials;
+
+const SES_CONFIG = {
+  accessKeyId,
+  secretAccessKey,
+  region: "ap-southeast-1",
+};
+
+const AWS_SES = new AWS.SES(SES_CONFIG);
+
+function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
+  const emailHtml = getEmailTemplate(username, title, message);
+  const params = {
+    Source: "BuddyNUS <noreply@buddynus.com>",
+    Destination: {
+      ToAddresses: [
+        email,
+      ],
+    },
+    ReplyToAddresses: [],
+    Message: {
+      Body: {
+        Html: {
+          Charset: "UTF-8",
+          Data: emailHtml,
+        },
+      },
+      Subject: {
+        Charset: "UTF-8",
+        Data: subject,
+      },
+    },
+  };
+  return AWS_SES.sendEmail(params).promise();
+}
 
 export function notifyPosterPostCreated(post: Post) {
   const subject = "Your study post is now live!";
@@ -295,19 +333,6 @@ function getEmailTemplate(username: string, title: string, message: string) {
 `;
 }
 
-
-function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
-  const emailHtml = getEmailTemplate(username, title, message);
-  const mail: FirestoreMail = {
-    message: {
-      subject: subject,
-      text: "",
-      html: emailHtml,
-    },
-    to: email,
-  };
-  return db.mail.doc().create(mail);
-}
 
 async function sendEmailToUser(user: User, subject: string, title: string, message: string) {
   return getAuth().getUser(user.id).then((userRecord) => {
