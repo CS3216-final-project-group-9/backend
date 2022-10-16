@@ -22,9 +22,10 @@ import {
 
 const POST_PER_PAGE = 20;
 
-export const createPost = functions.https.onCall(async (data, context) => {
+export const createPost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
+
     if (!uid) {
       throw new functions.https
           .HttpsError("unauthenticated", "User ID cannot be determined");
@@ -69,9 +70,9 @@ export const createPost = functions.https.onCall(async (data, context) => {
           .HttpsError("invalid-argument", "Description is too long");
     }
 
-    const momentStart = moment(newPost.startDateTime);
-    const momentEnd = moment(newPost.endDateTime);
     const momentNow = moment();
+    const momentEnd = moment(newPost.endDateTime);
+    const momentStart = moment(newPost.startDateTime);
     if (momentStart.isBefore(momentNow)) {
       throw new functions.https
           .HttpsError("invalid-argument", "Start time must be in the future");
@@ -95,7 +96,7 @@ export const createPost = functions.https.onCall(async (data, context) => {
   }
 });
 
-export const deletePost = functions.https.onCall(async (data, context) => {
+export const deletePost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -158,7 +159,7 @@ export const deletePost = functions.https.onCall(async (data, context) => {
   }
 });
 
-export const getExplorePost = functions.https.onCall(async (data, context) => {
+export const getExplorePost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const {page: pageRaw, location: locationRaw} = data;
     const page = pageRaw ? pageRaw as number: null;
@@ -203,7 +204,7 @@ export const getExplorePost = functions.https.onCall(async (data, context) => {
 });
 
 
-export const getAppliedPosts = functions.https.onCall( async (data, context) => {
+export const getAppliedPosts = functions.region("asia-southeast2").https.onCall( async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -241,7 +242,7 @@ export const getAppliedPosts = functions.https.onCall( async (data, context) => 
   }
 });
 
-export const getCreatedPosts = functions.https.onCall(async (data, context) => {
+export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {

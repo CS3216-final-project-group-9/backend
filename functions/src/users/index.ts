@@ -7,7 +7,7 @@ import {getPhoto} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
 import {HttpsError} from "firebase-functions/v1/https";
 
-export const createUser = functions.https.onCall(async (data, context) => {
+export const createUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -50,7 +50,7 @@ export const createUser = functions.https.onCall(async (data, context) => {
 });
 
 
-export const hasCreatedUserProfile = functions.https.onCall(async (data, context) => {
+export const hasCreatedUserProfile = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -72,7 +72,7 @@ export const hasCreatedUserProfile = functions.https.onCall(async (data, context
 });
 
 
-export const getUser = functions.https.onCall(async (data, context) => {
+export const getUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const {userId} = data;
     const userDoc = await db.users.doc(userId).get();
@@ -90,7 +90,7 @@ export const getUser = functions.https.onCall(async (data, context) => {
   }
 });
 
-export const updateUser = functions.https.onCall(async (data, context) => {
+export const updateUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {
@@ -123,7 +123,7 @@ export const updateUser = functions.https.onCall(async (data, context) => {
   }
 });
 
-export const getCurrentUser = functions.https.onCall(async (data, context) => {
+export const getCurrentUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
     if (!uid) {

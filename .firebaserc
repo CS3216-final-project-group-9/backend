@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "cs3216-final-group-9"
-  }
+    "default": "cs3216-final-group-9",
+    "production": "buddynus-production"
+  },
+  "targets": {},
+  "etags": {}
 }
