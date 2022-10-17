@@ -34,7 +34,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
     const userDoc = await db.users.doc(uid).get();
     const firestoreUser = userDoc.data();
     if (!firestoreUser) {
-      throw new functions.https.HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
+      throw new functions.https.HttpsError("not-found", CustomErrorCode.CURRENT_USER_PROFILE_NOT_IN_DB);
     }
     const user = parseUserFromFirestore(firestoreUser);
 
@@ -178,17 +178,17 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     const date = new Date();
     if (uid) {
       if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date)
+        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       } else {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).where("location", "in", location)
+        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       }
     } else {
       if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       } else {
-        postSnapshot = await db.posts.orderBy("startDateTime").where("startDateTime", ">=", date).where("location", "in", location)
+        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
             .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
       }
     }
@@ -254,7 +254,7 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
     }
     const todayDate = moment().startOf("day");
 
-    const firestorePosts= await db.posts.where("posterId", "==", uid).where("startDateTime", ">=", todayDate).get();
+    const firestorePosts= await db.posts.where("posterId", "==", uid).where("endDateTime", ">=", todayDate).get();
     const createdRequests: CreatedRequest[] = [];
     await Promise.all(firestorePosts.docs.map( async (postDoc) => {
       const firestorePost = postDoc.data();

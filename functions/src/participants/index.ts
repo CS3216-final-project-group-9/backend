@@ -15,6 +15,12 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
       throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
 
+    const currentUserDoc = await db.users.doc(uid).get();
+    const firestoreCurrentUser = currentUserDoc.data();
+    if (!firestoreCurrentUser) {
+      throw new functions.https.HttpsError("not-found", CustomErrorCode.CURRENT_USER_PROFILE_NOT_IN_DB);
+    }
+
     const {postId: postIdRaw} = data;
     const postId = postIdRaw? postIdRaw as string : null;
     if (!postId) {
@@ -154,7 +160,7 @@ async function getParticipantAndPost(userId:string, postId: string) {
   const docs = await Promise.all(promises);
   const postDoc = docs[0];
   const userDoc = docs[1];
-  if (!postDoc.exists || !userDoc.exists) {
+  if (!postDoc.exists && !userDoc.exists) {
     throw new functions.https
         .HttpsError("not-found", CustomErrorCode.USER_AND_POST_NOT_IN_DB);
   }
