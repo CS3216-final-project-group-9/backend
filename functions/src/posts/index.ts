@@ -231,7 +231,16 @@ export const getAppliedPosts = functions.region("asia-southeast2").https.onCall(
     }));
 
     // Accepted first, pending second, normal third
-    const sorted = appliedRequests.sort((a, b) => a.status - b.status);
+    // If same, then sort by date
+    const sorted = appliedRequests.sort((a, b) => {
+      const statusDiff = a.status - b.status;
+      if (statusDiff !== 0) {
+        return statusDiff;
+      }
+      const aStart = moment(a.post.startDateTime);
+      const bStart = moment(b.post.startDateTime);
+      return aStart.isBefore(bStart, 'minute') ? -1 : 1;
+    });
     return {success: true, message: sorted};
   } catch (e) {
     console.error(e);
@@ -275,9 +284,25 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
         applicants: applicants,
       });
     }));
-    // those with most number of applicants will show first
+    // those with applicants will show first, followed by those with accepted applicants, followed by those sorted by date
     const sorted = createdRequests.sort((a, b) => {
-      return b.applicants.length - a.applicants.length;
+      const aHasApplicants = a.applicants.length > 0;
+      const bHasApplicants = b.applicants.length > 0;
+      if (aHasApplicants && !bHasApplicants) {
+        return -1;
+      } else if (bHasApplicants && !aHasApplicants) {
+        return 1;
+      }
+      const aHasParticipants = a.post.participants.length > 0;
+      const bHasParticipants = b.post.participants.length > 0;
+      if (aHasParticipants && !bHasParticipants) {
+        return -1;
+      } else if (bHasParticipants && !aHasParticipants) {
+        return 1;
+      }
+      const aDateOfStudy = moment(a.post.startDateTime);
+      const bDateOfStudy = moment(b.post.startDateTime);
+      return aDateOfStudy.isBefore(bDateOfStudy, 'minute') ? -1 : 1;
     });
     return {success: true, message: sorted};
   } catch (e) {
