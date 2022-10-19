@@ -1,6 +1,7 @@
 import {Gender, Faculty} from "./user";
 import {PostLocation} from "./post";
 import {AppliedRequestStatus} from "./postApplication";
+import { NotificationType } from "./notification";
 
 type Message = {
     subject: string;
@@ -40,3 +41,23 @@ export type FirestoreCustomPost = {
     location: PostLocation;
     description: string;
   }
+
+  export interface FirestoreCustomNotification {
+    id: string;
+    type: NotificationType,
+    userId: string,
+    hasBeenViewed: boolean,
+    otherUserId?: string   // the user related to ur notification. eg: user who applied to your post
+    title?: string,
+    data?: FirestoreCustomAppliedRequest | FirestoreCustomCreatedRequest | string
+  }
+
+  export interface FirestoreCustomCreatedRequest {
+    postId: string
+  }
+
+  export interface FirestoreCustomAppliedRequest {
+    userId: string,
+    postId: string
+  }
+

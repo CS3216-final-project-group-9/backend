@@ -239,7 +239,7 @@ export const getAppliedPosts = functions.region("asia-southeast2").https.onCall(
       }
       const aStart = moment(a.post.startDateTime);
       const bStart = moment(b.post.startDateTime);
-      return aStart.isBefore(bStart, 'minute') ? -1 : 1;
+      return aStart.isBefore(bStart, "minute") ? -1 : 1;
     });
     return {success: true, message: sorted};
   } catch (e) {
@@ -302,7 +302,7 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
       }
       const aDateOfStudy = moment(a.post.startDateTime);
       const bDateOfStudy = moment(b.post.startDateTime);
-      return aDateOfStudy.isBefore(bDateOfStudy, 'minute') ? -1 : 1;
+      return aDateOfStudy.isBefore(bDateOfStudy, "minute") ? -1 : 1;
     });
     return {success: true, message: sorted};
   } catch (e) {
