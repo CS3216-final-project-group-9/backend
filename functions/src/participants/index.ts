@@ -7,6 +7,7 @@ import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
+import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification} from "../notifications/createFirestoreNotification";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -53,6 +54,8 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     // Email notifications
     const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user)];
     await Promise.all(promises);
+
+    await addAppliedToPostNotification(postId, post.poster.id, uid, "New Post Application");
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
     console.error(e);
@@ -88,6 +91,8 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     });
     await batch.commit();
     await notifyPosterApplicantCancelled(post);
+    await addCancelPostApplicationNotification(postId, post.poster.id, uid, "Applicant has deleted post application");
+    await addDeletePostApplicationNotification(uid, "Your post application has been deleted");
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
     console.error(e);
@@ -143,9 +148,11 @@ export const responsePostApplication = functions.region("asia-southeast2").https
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
       await notifyParticipantHostAccepted(post, participant);
+      await addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, "You have been accepted to post");
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
     }
+
     return {success: true,
       message: "Response to applicant successfully"};
   } catch (e) {
