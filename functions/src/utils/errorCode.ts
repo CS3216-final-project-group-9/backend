@@ -11,6 +11,7 @@ export const PAGE_INPUT_NOT_FOUND = "Page could not be found in input";
 export const LOCATION_INPUT_NOT_FOUND = "Location could not be found in input";
 export const APPLICANT_ID_INPUT_NOT_FOUND = "Applicant ID could not be found in input";
 export const NOTIFICATION_ID_INPUT_NOT_FOUND = "Notification ID could not be found in input";
+export const TOKEN_INPUT_NOT_FOUND = "Token could not be found in input";
 
 // DB Error
 export const USER_NOT_IN_DB = "Could not find user in DB";

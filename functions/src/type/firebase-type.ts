@@ -23,6 +23,7 @@ export type FirestoreCustomUser = {
     telegramHandle: string
     profilePhoto: string;
     thumbnailPhoto: string;
+    tokens?: string[]
 }
 
 export type FirestoreCustomApplicant = {
