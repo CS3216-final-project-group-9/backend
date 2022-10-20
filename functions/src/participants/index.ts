@@ -8,6 +8,8 @@ import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification} from "../notifications/createFirestoreNotification";
+import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
+import {createAppliedRequest} from "../posts/getCustomPost";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -50,9 +52,10 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
       updatedTime: new Date(),
     };
     // Add post application
-    await db.applicants.doc().set(newApplication);
+    const applicationId = db.applicants.doc().id;
+    await db.applicants.doc(applicationId).set(newApplication);
     // Email notifications
-    const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user)];
+    const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user), updateCampaignForApplying(uid, applicationId)];
     await Promise.all(promises);
 
     await addAppliedToPostNotification(postId, post.poster.id, uid, "New Post Application");
@@ -85,14 +88,17 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
           .HttpsError("not-found", CustomErrorCode.APPLICANT_NOT_IN_DB);
     }
     const batch = unTypedFirestore.batch();
-
+    const applicationId = participants.docs[0].id;
     participants.forEach((doc) => {
       batch.delete(doc.ref);
     });
     await batch.commit();
-    await notifyPosterApplicantCancelled(post);
-    await addCancelPostApplicationNotification(postId, post.poster.id, uid, "Applicant has deleted post application");
-    await addDeletePostApplicationNotification(uid, "Your post application has been deleted");
+    const promises = [
+      updateCampaignForDeletedApplication(uid, applicationId),
+      notifyPosterApplicantCancelled(post),
+      addCancelPostApplicationNotification(postId, post.poster.id, uid, "Applicant has deleted post application"),
+      addDeletePostApplicationNotification(uid, "Your post application has been deleted")];
+    await Promise.all(promises);
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
     console.error(e);
@@ -138,6 +144,7 @@ export const responsePostApplication = functions.region("asia-southeast2").https
           .HttpsError("not-found", CustomErrorCode.USER_NOT_IN_PARTICIPANT_LIST);
     }
     const applicationDoc = applicationQuery.docs[0];
+    const applicationId = applicationDoc.id;
     if (applicationDoc.data().status === responseStatus) {
       throw new functions.https
           .HttpsError("not-found", CustomErrorCode.NO_APPLICATION_STATUS_CHANGE);
@@ -147,8 +154,16 @@ export const responsePostApplication = functions.region("asia-southeast2").https
     });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      await notifyParticipantHostAccepted(post, participant);
-      await addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, "You have been accepted to post");
+      const appliedRequest = await createAppliedRequest(postId, AppliedRequestStatus.ACCEPTED);
+      if (!appliedRequest) {
+        return {success: false,
+          message: "Unexpected error: Couldnt get applied request"};
+      }
+      const promises = [
+        notifyParticipantHostAccepted(post, participant),
+        updateCampaignForAcceptedApplication(applicantId, uid, applicationId, appliedRequest),
+        addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, "You have been accepted to post")];
+      await Promise.all(promises);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
     }

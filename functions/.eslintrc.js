@@ -30,5 +30,6 @@ module.exports = {
     "quotes": ["error", "double"],
     "max-len": ["off"],
     "import/no-unresolved": 0,
+    "linebreak-style": 0,
   },
 };

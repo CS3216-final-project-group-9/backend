@@ -17,6 +17,7 @@ import {
 } from "./firestorePost";
 import * as CustomErrorCode from "../utils/errorCode";
 import {getAppliedPostsFromFirestore, getCreatedPostsFromFirestore} from "./getCustomPost";
+import {updateCampaignForDeletedApplication, updateCampaignForSession, updateCampaignForSessionDeleted} from "../campaigns";
 
 
 const POST_PER_PAGE = 20;
@@ -80,6 +81,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
+    await updateCampaignForSession(user.id, parsedPost.id);
 
     // Email notifications
     await notifyPosterPostCreated(newPost);
@@ -134,18 +136,17 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const batch = unTypedFirestore.batch();
 
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
-
+    const promises = [batch.commit(), updateCampaignForSessionDeleted(uid, firestorePost)];
     applicantDoc.forEach((doc) => {
+      const applicantData = doc.data();
       batch.delete(doc.ref);
+      promises.push(updateCampaignForDeletedApplication(applicantData.userId, doc.id));
     });
-
-
-    await batch.commit();
+    await Promise.all(promises);
 
     // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
     await notifyParticipantsHostCancelled(post, emailedApplicants);
-
 
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {

@@ -7,6 +7,8 @@ import {getPhoto} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
+import {FirestoreCustomCampaign} from "../type/firebase-type";
+import {createCampaign} from "../campaigns";
 
 
 export const createUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
@@ -42,6 +44,7 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
     newUser.profilePhoto = photos[1];
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
+    await createNewCampaign(uid);
     return {success: true, message: String("New user created successfully")};
   } catch (e) {
     console.error(e);
@@ -49,6 +52,18 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
     return {success: false, message: e};
   }
 });
+
+function createNewCampaign(uid: string) {
+  const campaign = {
+    id: uid,
+    userId: uid,
+    chances: 1,
+    description: "Stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. For more details, visit our instagram at @buddynus.official!",
+    startDateTime: new Date(),
+    endDateTime: new Date(),
+  } as FirestoreCustomCampaign;
+  return createCampaign(campaign);
+}
 
 
 export const hasCreatedUserProfile = functions.region("asia-southeast2").https.onCall(async (data, context) => {
