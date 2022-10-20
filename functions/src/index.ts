@@ -1,6 +1,7 @@
 import * as users from "./users";
 import * as participants from "./participants";
 import * as posts from "./posts";
+import * as notification from "./notifications";
 
 // Users
 export const createUser = users.createUser;
@@ -16,6 +17,11 @@ export const deletePost = posts.deletePost;
 export const getExplorePost = posts.getExplorePost;
 export const getAppliedPosts = posts.getAppliedPosts;
 export const getCreatedPosts = posts.getCreatedPosts;
+
+
+// Notifications
+export const getNotifications = notification.getNotifications;
+export const markNotificationRead = notification.markNotificationRead;
 
 
 // Participants

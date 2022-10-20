@@ -10,7 +10,7 @@ export const POST_OBJECT_INPUT_NOT_FOUND = "Post object could not be found in in
 export const PAGE_INPUT_NOT_FOUND = "Page could not be found in input";
 export const LOCATION_INPUT_NOT_FOUND = "Location could not be found in input";
 export const APPLICANT_ID_INPUT_NOT_FOUND = "Applicant ID could not be found in input";
-
+export const NOTIFICATION_ID_INPUT_NOT_FOUND = "Notification ID could not be found in input";
 
 // DB Error
 export const USER_NOT_IN_DB = "Could not find user in DB";
@@ -33,3 +33,4 @@ export const DUPLICATE_APPLICATION_CREATION = "User already applied for this pos
 export const DUPLICATE_TELE = "Telegram handle has been used";
 export const DUPLICATE_USERNAME = "Username has been used";
 export const DUPLICATE_TELE_AND_USERNAME = "Telegram handle and username have been used";
+

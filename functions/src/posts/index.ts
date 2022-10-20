@@ -4,11 +4,7 @@ import moment = require("moment-timezone");
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost} from "../type/firebase-type";
 import {Post, PostLocation} from "../type/post";
-import {
-  AppliedRequest,
-  AppliedRequestStatus,
-  CreatedRequest,
-} from "../type/postApplication";
+import {AppliedRequestStatus} from "../type/postApplication";
 import {User} from "../type/user";
 import {notifyParticipantsHostCancelled, notifyPosterPostCreated} from "../utils/email";
 import {
@@ -20,6 +16,7 @@ import {
   getPostFromFirestorePost,
 } from "./firestorePost";
 import * as CustomErrorCode from "../utils/errorCode";
+import {getAppliedPostsFromFirestore, getCreatedPostsFromFirestore} from "./getCustomPost";
 
 
 const POST_PER_PAGE = 20;
@@ -212,23 +209,7 @@ export const getAppliedPosts = functions.region("asia-southeast2").https.onCall(
 
     const applicants = await db.applicants.where("userId", "==", uid).get();
 
-    const appliedRequests: AppliedRequest[] = [];
-    await Promise.all(applicants.docs.map( async (applicantDoc) => {
-      const applicant = applicantDoc.data();
-      const postDoc = await db.posts.doc(applicant.postId).get();
-      const firestorePost =postDoc.data();
-      if (firestorePost) {
-        const post = await getPostFromFirestorePost(firestorePost);
-        const todayDate = moment();
-        const isBefore = moment(post.startDateTime).isBefore(todayDate, "day");
-        if (!isBefore) {
-          appliedRequests.push({
-            status: applicant.status,
-            post: post,
-          });
-        }
-      }
-    }));
+    const appliedRequests = await getAppliedPostsFromFirestore(applicants);
 
     // Accepted first, pending second, normal third
     // If same, then sort by date
@@ -264,26 +245,7 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
     const todayDate = moment().startOf("day");
 
     const firestorePosts= await db.posts.where("posterId", "==", uid).where("endDateTime", ">=", todayDate).get();
-    const createdRequests: CreatedRequest[] = [];
-    await Promise.all(firestorePosts.docs.map( async (postDoc) => {
-      const firestorePost = postDoc.data();
-      const post = await getPostFromFirestorePost(firestorePost);
-
-      const participantsDoc = await db.applicants
-          .where("postId", "==", firestorePost.id).where("status", "==", AppliedRequestStatus.PENDING).get();
-      const applicants: User[] = [];
-      await Promise.all(participantsDoc.docs.map(async (participantDoc) => {
-        const applicant = participantDoc.data();
-        const applicantDoc = await db.users.doc(applicant.userId).get();
-        const app = applicantDoc.data();
-        if (app) applicants.push(parseUserFromFirestore(app));
-      }));
-
-      createdRequests.push({
-        post: post,
-        applicants: applicants,
-      });
-    }));
+    const createdRequests = await getCreatedPostsFromFirestore(firestorePosts);
     // those with applicants will show first, followed by those with accepted applicants, followed by those sorted by date
     const sorted = createdRequests.sort((a, b) => {
       const aHasApplicants = a.applicants.length > 0;
