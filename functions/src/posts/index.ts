@@ -137,7 +137,7 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     applicantDoc.forEach((doc) => {
       const applicantData = doc.data();
       batch.delete(doc.ref);
-      promises.push(updateCampaignForDeletedApplication(applicantData.userId, doc.id));
+      promises.push(updateCampaignForDeletedApplication(applicantData.userId, applicantData));
     });
     await Promise.all(promises);
     const post = await getPostFromFirestorePost(firestorePost);

@@ -10,12 +10,6 @@ export enum AppliedRequestStatus {
   REJECTED
 }
 
-export enum CampaignChance {
-  NOT_RECORDED,
-  RECORDED_CREATE,
-  RECORDED_ACCEPT
-}
-
 /**
  * Contains all details for an applied request.
  */

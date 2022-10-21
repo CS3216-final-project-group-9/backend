@@ -94,17 +94,21 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     }
     const batch = unTypedFirestore.batch();
     const applicationId = participants.docs[0].id;
+    const application = await db.applicants.doc(applicationId).get();
+    const applicationData = await application.data();
+    if (!applicationData) {
+      return;
+    }
     participants.forEach((doc) => {
       batch.delete(doc.ref);
     });
     await batch.commit();
 
     const applicantMessage = "Your post application has been deleted";
-
     const posterMessage = "Applicant has deleted post application";
 
     const promises = [
-      updateCampaignForDeletedApplication(uid, applicationId),
+      updateCampaignForDeletedApplication(uid, applicationData),
       notifyPosterApplicantCancelled(post),
       getTokensAndSendMessage(uid, applicantMessage),
       addDeletePostApplicationNotification(uid, applicantMessage),

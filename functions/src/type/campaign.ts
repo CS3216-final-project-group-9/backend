@@ -9,3 +9,9 @@ export type Campaign = {
     endDateTime: string;
     image: string;
   }
+
+export enum CampaignChance {
+    NOT_RECORDED,
+    RECORDED_CREATE,
+    RECORDED_ACCEPT
+}

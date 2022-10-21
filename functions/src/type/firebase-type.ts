@@ -1,7 +1,8 @@
 import {Gender, Faculty} from "./user";
 import {PostLocation} from "./post";
-import {AppliedRequestStatus, CampaignChance} from "./postApplication";
+import {AppliedRequestStatus} from "./postApplication";
 import {NotificationType} from "./notification";
+import {CampaignChance} from "./campaign";
 
 type Message = {
     subject: string;
@@ -58,7 +59,7 @@ export type FirestoreCustomPost = {
     /** List of users who have been confirmed to be going for the post event */
     location: PostLocation;
     description: string;
-    hasBeenUsedForCampaign?: boolean | undefined;
+    hasBeenUsedForCampaign?: CampaignChance | undefined;
   }
 
 export interface FirestoreCustomNotification {
