@@ -3,10 +3,12 @@ import * as functions from "firebase-functions";
 import * as CustomErrorCode from "../utils/errorCode";
 import {HttpsError} from "firebase-functions/v1/https";
 import {FieldValue} from "firebase-admin/firestore";
-import {FirestoreCustomCampaign, FirestoreCustomPost} from "../type/firebase-type";
+import {FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
 import {getAppliedPostsFromFirestore} from "../posts/getCustomPost";
 import {AppliedRequest, CampaignChance} from "../type/postApplication";
+import {parseCampaignFromFirestore} from "../utils/type-converter";
+import {Campaign} from "../type/campaign";
 
 async function checkHasExceededLimitForStudySessions(userId: string) {
   const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", "==", true).get();
@@ -131,6 +133,38 @@ export const updateCampaignForSessionDeleted = async function(userId: string, po
   return unTypedFirestore.collection("campaigns").doc(userId).update({chances: FieldValue.increment(-1)});
 };
 
+export const addCampaignsToExistingUsers = functions.region("asia-southeast2").pubsub.schedule("55 15 * * *").timeZone("Asia/Singapore").onRun(async () => {
+  const users = await db.users.get();
+  const batch = unTypedFirestore.batch();
+  const campaignName = "LAUNCH";
+  const defaultCampaign: FirestoreCustomCampaign = {
+    id: "",
+    userId: "",
+    chances: 1,
+    campaignId: campaignName,
+  };
+  for (const user of users.docs) {
+    const campaignUserObject = {...defaultCampaign};
+    const uid = user.id;
+    campaignUserObject.id = uid;
+    campaignUserObject.userId = uid;
+    const newRef = db.campaigns.doc(uid);
+    batch.set(newRef, campaignUserObject);
+  }
+  const startDate = moment().utcOffset(8).startOf("day");
+  const endDate = startDate.add(15, "days").endOf("day");
+  const campaignDetails: FirestoreCustomCampaignDetails = {
+    description: "To celebrate BuddyNUS's chance, stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. Winners will be announced on 4th November. For more details, visit our instagram at @buddynus.official!",
+    title: "Launch giveaway!",
+    tncs: "",
+    startDateTime: startDate.toDate(),
+    endDateTime: endDate.toDate(),
+  };
+  const campaignRef = db.campaignDetails.doc(campaignName);
+  batch.set(campaignRef, campaignDetails);
+  return batch.commit();
+});
+
 export const getUserCampaigns = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
     const uid = context.auth?.uid;
@@ -138,7 +172,16 @@ export const getUserCampaigns = functions.region("asia-southeast2").https.onCall
       throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
     const firestoreCampaigns = await db.campaigns.where("userId", "==", uid).get();
-    const campaigns = firestoreCampaigns.docs.map((doc) => doc.data());
+    const campaigns: Campaign[] = [];
+    await Promise.all(firestoreCampaigns.docs.map(async (doc) => {
+      const data = doc.data();
+      const campaignId = data.campaignId;
+      const campaignDoc = await db.campaignDetails.doc(campaignId).get();
+      const campaignDetails = campaignDoc.data();
+      if (campaignDetails) {
+        campaigns.push(parseCampaignFromFirestore(data, campaignDetails));
+      }
+    }));
     return {success: true, message: campaigns};
   } catch (e) {
     console.error(e);

@@ -2,6 +2,7 @@ import * as users from "./users";
 import * as participants from "./participants";
 import * as posts from "./posts";
 import * as notification from "./notifications";
+import * as campaigns from "./campaigns";
 
 // Users
 export const createUser = users.createUser;
@@ -31,3 +32,6 @@ export const createPostApplication = participants.createPostApplication;
 export const responsePostApplication = participants.responsePostApplication;
 export const deletePostApplication = participants.deletePostApplication;
 
+// Campaigns
+export const getUserCampaigns = campaigns.getUserCampaigns;
+export const addCampaignsToExistingUsers = campaigns.addCampaignsToExistingUsers;

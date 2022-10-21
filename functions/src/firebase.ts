@@ -1,6 +1,7 @@
 import * as admin from "firebase-admin";
 import {FirestoreCustomApplicant,
   FirestoreCustomCampaign,
+  FirestoreCustomCampaignDetails,
   FirestoreCustomNotification,
   FirestoreCustomPost,
   FirestoreCustomUser,
@@ -28,6 +29,7 @@ const db = {
   users: dataPoint<FirestoreCustomUser>("users"),
   posts: dataPoint<FirestoreCustomPost>("posts"),
   campaigns: dataPoint<FirestoreCustomCampaign>("campaigns"),
+  campaignDetails: dataPoint<FirestoreCustomCampaignDetails>("campaignDetails"),
   applicants: dataPoint<FirestoreCustomApplicant>("applicants"),
   mail: dataPoint<FirestoreMail>("mail"),
   notifications: dataPoint<FirestoreCustomNotification>("notifications"),

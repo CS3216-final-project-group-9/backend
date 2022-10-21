@@ -1,7 +1,8 @@
-import {FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
+import {FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
 import {User} from "../type/user";
 import {Post} from "../type/post";
 import moment = require("moment");
+import {Campaign} from "../type/campaign";
 
 export function parseUserToFirestore(user: User) {
   const parsedUser: FirestoreCustomUser = {
@@ -44,6 +45,15 @@ export function parsePostToFirestore(post: Post) {
     description: post.description,
   };
   return parsedPost;
+}
+
+export function parseCampaignFromFirestore(firestoreCampaign: FirestoreCustomCampaign, firestoreCampaignDetails: FirestoreCustomCampaignDetails) {
+  return {
+    ...firestoreCampaign,
+    ...firestoreCampaignDetails,
+    startDateTime: (firestoreCampaignDetails.startDateTime as any).toDate().toISOString(),
+    endDateTime: (firestoreCampaignDetails.endDateTime as any).toDate().toISOString(),
+  } as Campaign;
 }
 
 export function parsePostFromFirestore(

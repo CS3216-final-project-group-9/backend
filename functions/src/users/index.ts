@@ -54,13 +54,11 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
 });
 
 function createNewCampaign(uid: string) {
-  const campaign = {
+  const campaign: FirestoreCustomCampaign = {
     id: uid,
     userId: uid,
     chances: 1,
-    description: "Stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. For more details, visit our instagram at @buddynus.official!",
-    startDateTime: new Date(),
-    endDateTime: new Date(),
+    campaignId: "LAUNCH",
   } as FirestoreCustomCampaign;
   return createCampaign(campaign);
 }

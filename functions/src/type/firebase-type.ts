@@ -9,13 +9,19 @@ type Message = {
     html: string;
 }
 
+export type FirestoreCustomCampaignDetails = {
+  title: string;
+  description: string;
+  tncs: string;
+  startDateTime: Date;
+  endDateTime: Date;
+}
+
 export type FirestoreCustomCampaign = {
   id: string;
   userId: string;
   chances: number;
-  description: string;
-  startDateTime: Date;
-  endDateTime: Date;
+  campaignId: string;
 }
 
 export type FirestoreMail = {
@@ -51,7 +57,7 @@ export type FirestoreCustomPost = {
     /** List of users who have been confirmed to be going for the post event */
     location: PostLocation;
     description: string;
-    hasBeenUsedForCampaign: boolean | undefined;
+    hasBeenUsedForCampaign?: boolean | undefined;
   }
 
 export interface FirestoreCustomNotification {
