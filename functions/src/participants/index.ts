@@ -95,21 +95,20 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
       batch.delete(doc.ref);
     });
     await batch.commit();
-    await notifyPosterApplicantCancelled(post);
 
     const applicantMessage = "Your post application has been deleted";
-    await getTokensAndSendMessage(uid, applicantMessage);
-    await addDeletePostApplicationNotification(uid, applicantMessage);
 
     const posterMessage = "Applicant has deleted post application";
-    await getTokensAndSendMessage(post.poster.id, posterMessage);
-    await addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage);
 
     const promises = [
       updateCampaignForDeletedApplication(uid, applicationId),
       notifyPosterApplicantCancelled(post),
-      addCancelPostApplicationNotification(postId, post.poster.id, uid, "Applicant has deleted post application"),
-      addDeletePostApplicationNotification(uid, "Your post application has been deleted")];
+      getTokensAndSendMessage(uid, applicantMessage),
+      addDeletePostApplicationNotification(uid, applicantMessage),
+      getTokensAndSendMessage(post.poster.id, posterMessage),
+      addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage),
+    ];
+
     await Promise.all(promises);
     return {success: true, message: "Delete application to post successfully"};
   } catch (e) {
@@ -166,10 +165,7 @@ export const responsePostApplication = functions.region("asia-southeast2").https
     });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      await notifyParticipantHostAccepted(post, participant);
       const applicantMessage = "You have been accepted to post";
-      await getTokensAndSendMessage(applicantId, applicantMessage);
-      await addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage);
       const appliedRequest = await createAppliedRequest(postId, AppliedRequestStatus.ACCEPTED);
       if (!appliedRequest) {
         return {success: false,
@@ -178,7 +174,8 @@ export const responsePostApplication = functions.region("asia-southeast2").https
       const promises = [
         notifyParticipantHostAccepted(post, participant),
         updateCampaignForAcceptedApplication(applicantId, uid, applicationId, appliedRequest),
-        addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, "You have been accepted to post")];
+        getTokensAndSendMessage(applicantId, applicantMessage),
+        addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage)];
       await Promise.all(promises);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);
