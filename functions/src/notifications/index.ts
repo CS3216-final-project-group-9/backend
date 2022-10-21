@@ -72,12 +72,12 @@ export const sendNotificationToken = functions.region("asia-southeast2").https.o
     }
     const rawToken = data.token;
     const token = rawToken as string;
-    if (!(rawToken instanceof String)) {
+    if (!(typeof(token) == "string")) {
       throw new functions.https.HttpsError("invalid-argument", CustomErrorCode.TOKEN_INPUT_NOT_FOUND);
     }
     await unTypedFirestore.collection("users").doc(uid).set({
       tokens: FieldValue.arrayUnion(token),
-    });
+    }, {merge: true});
     return {success: true, message: "Add token successfully"};
   } catch (e) {
     console.error(e);
