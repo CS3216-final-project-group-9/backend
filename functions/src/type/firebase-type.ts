@@ -15,6 +15,7 @@ export type FirestoreCustomCampaignDetails = {
   tncs: string;
   startDateTime: Date;
   endDateTime: Date;
+  image: string;
 }
 
 export type FirestoreCustomCampaign = {

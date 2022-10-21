@@ -7,4 +7,5 @@ export type Campaign = {
     tncs: string;
     startDateTime: string;
     endDateTime: string;
+    image: string;
   }

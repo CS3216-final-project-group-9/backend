@@ -81,11 +81,8 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
-    await updateCampaignForSession(user.id, parsedPost.id);
-
-    // Email notifications
-    await notifyPosterPostCreated(newPost);
-
+    const promises = [updateCampaignForSession(user.id, parsedPost.id), notifyPosterPostCreated(newPost)];
+    await Promise.all(promises);
     return {success: true, message: "Post created successfully"};
   } catch (e) {
     console.error(e);

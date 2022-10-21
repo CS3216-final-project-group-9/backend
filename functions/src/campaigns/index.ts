@@ -5,23 +5,22 @@ import {HttpsError} from "firebase-functions/v1/https";
 import {FieldValue} from "firebase-admin/firestore";
 import {FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
-import {getAppliedPostsFromFirestore} from "../posts/getCustomPost";
+import {createAppliedRequest, getAppliedPostsFromFirestore} from "../posts/getCustomPost";
 import {AppliedRequest, CampaignChance} from "../type/postApplication";
 import {parseCampaignFromFirestore} from "../utils/type-converter";
 import {Campaign} from "../type/campaign";
 
-async function checkHasExceededLimitForStudySessions(userId: string) {
+async function checkHasExceededLimitForStudySessions(userId: string, date: Date) {
   const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", "==", true).get();
   const recordedApplicants = await db.applicants.where("userId", "==", userId).where("campaignChances", ">", CampaignChance.NOT_RECORDED).get();
   const totalLen = recordedPosts.size + recordedApplicants.size;
   if (totalLen > 1) {
     return true;
   }
-  const today = new Date();
   const filteredPosts = recordedPosts.docs.filter((doc) => {
     const data = doc.data();
     const start = data.startDateTime;
-    const isSame = moment(start).isSame(today, "day");
+    const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
   if (filteredPosts.length > 0) {
@@ -30,7 +29,7 @@ async function checkHasExceededLimitForStudySessions(userId: string) {
   const appliedRequests = await getAppliedPostsFromFirestore(recordedApplicants);
   const filteredApplicants = appliedRequests.filter((applicant) => {
     const start = applicant.post.startDateTime;
-    const isSame = moment(start).isSame(today, "day");
+    const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
   return filteredApplicants.length > 0;
@@ -45,11 +44,15 @@ export const updateCampaignForSession = async function(userId: string, postId: s
   const batch = unTypedFirestore.batch();
   const campaignRef = db.campaigns.doc(userId);
   const postRef = db.posts.doc(postId);
-  const postData = await postRef.get();
-  if (postData.data()?.hasBeenUsedForCampaign) {
+  const postDoc = await postRef.get();
+  const postData = postDoc.data();
+  if (!postData) {
     return;
   }
-  const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId);
+  if (postData.hasBeenUsedForCampaign) {
+    return;
+  }
+  const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId, postData.startDateTime);
   if (hasExceededLimit) {
     return;
   }
@@ -86,15 +89,21 @@ export const updateCampaignForApplying = async function(userId: string, applicat
   const batch = unTypedFirestore.batch();
   const campaignRef = db.campaigns.doc(userId);
   const applicationRef = db.applicants.doc(applicationId);
-  const applicationData = await applicationRef.get();
-  if (!applicationData.exists) {
+  const applicationDoc = await applicationRef.get();
+  const applicationData = applicationDoc.data();
+  if (!applicationData) {
     return;
   }
-  const chances = applicationData.data()?.campaignChances as number;
+  const chances = applicationData.campaignChances as number;
   if (chances > CampaignChance.NOT_RECORDED) {
     return;
   }
-  const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId);
+  const postDoc = await db.posts.doc(applicationData.postId).get();
+  const postData = postDoc.data();
+  if (!postData) {
+    return;
+  }
+  const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId, postData.startDateTime);
   if (hasExceededLimit) {
     return;
   }
@@ -133,7 +142,7 @@ export const updateCampaignForSessionDeleted = async function(userId: string, po
   return unTypedFirestore.collection("campaigns").doc(userId).update({chances: FieldValue.increment(-1)});
 };
 
-export const addCampaignsToExistingUsers = functions.region("asia-southeast2").pubsub.schedule("55 15 * * *").timeZone("Asia/Singapore").onRun(async () => {
+export const addCampaignsToExistingUsers = functions.region("asia-southeast2").pubsub.schedule("15 17 * * *").timeZone("Asia/Singapore").onRun(async () => {
   const users = await db.users.get();
   const batch = unTypedFirestore.batch();
   const campaignName = "LAUNCH";
@@ -152,11 +161,12 @@ export const addCampaignsToExistingUsers = functions.region("asia-southeast2").p
     batch.set(newRef, campaignUserObject);
   }
   const startDate = moment().utcOffset(8).startOf("day");
-  const endDate = startDate.add(15, "days").endOf("day");
+  const endDate = startDate.clone().add(14, "days").endOf("day");
   const campaignDetails: FirestoreCustomCampaignDetails = {
-    description: "To celebrate BuddyNUS's chance, stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. Winners will be announced on 4th November. For more details, visit our instagram at @buddynus.official!",
+    description: "To celebrate BuddyNUS's launch, stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. Winners will be announced on 4th November. For more details, visit our instagram at @buddynus.official!",
     title: "Launch giveaway!",
     tncs: "",
+    image: "https://firebasestorage.googleapis.com/v0/b/cs3216-final-group-9.appspot.com/o/assets%2Fgiveaway.jpg?alt=media&token=9d0e39fc-cbd3-4881-b6f1-2517f7d8e561",
     startDateTime: startDate.toDate(),
     endDateTime: endDate.toDate(),
   };
