@@ -1,5 +1,5 @@
 
-import {db} from "../firebase";
+import {cloudMessageAdmin, db} from "../firebase";
 import {FirestoreCustomNotification} from "../type/firebase-type";
 import {NotificationType} from "../type/notification";
 
@@ -35,7 +35,6 @@ export async function addCancelPostApplicationNotification(postId:string, poster
   };
   await ref.set(newNotification);
 }
-
 
 export async function addAcceptPostApplicationNotification(postId:string, posterId: string, applicantId:string, title: string) {
   const ref = db.notifications.doc();
@@ -80,4 +79,34 @@ export async function addDeletePostApplicationNotification(userId: string, title
   await ref.set(newNotification);
 }
 
+export async function getTokensAndSendMessage(title: string, uid: string) {
+  const userDoc = await db.users.doc(uid).get();
+  const user = userDoc.data();
+  const rawTokens = user?.tokens;
+  if (typeof rawTokens === "undefined") {
+    console.log("Cannot send notification to user as cannot find user");
+  }
+  const tokens = rawTokens as string[];
+  await sendToAllToken(title, tokens);
+}
 
+export async function sendToAllToken(title: string, tokens: string[]) {
+  await Promise.all(tokens.map( async (token) => {
+    await sendCloudMessage(title, token);
+  }));
+}
+
+export async function sendCloudMessage(title: string, registrationToken: string) {
+  try {
+    const cloudMessage = {
+      notification: {
+        title: title,
+      },
+      token: registrationToken,
+    };
+
+    await cloudMessageAdmin.send(cloudMessage);
+  } catch (e) {
+    console.log(e);
+  }
+}

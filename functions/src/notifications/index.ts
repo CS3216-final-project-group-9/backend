@@ -87,7 +87,7 @@ export const sendNotificationToken = functions.region("asia-southeast2").https.o
     }
 
     await unTypedFirestore.collection("users").doc(uid).set({
-      tokens: FieldValue.arrayRemove(token),
+      tokens: FieldValue.arrayUnion(token),
     });
 
 
