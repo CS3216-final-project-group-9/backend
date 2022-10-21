@@ -22,7 +22,7 @@ export const getCreatedPosts = posts.getCreatedPosts;
 
 // Notifications
 export const getNotifications = notification.getNotifications;
-export const markNotificationRead = notification.markNotificationRead;
+export const markNotification = notification.markNotificationRead;
 export const sendNotificationToken = notification.sendNotificationToken;
 export const isUserAlreadyRegisteredForNotifications = notification.isUserAlreadyRegisteredForNotifications;
 

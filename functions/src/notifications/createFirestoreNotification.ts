@@ -17,6 +17,7 @@ export async function addAppliedToPostNotification(postId:string, posterId: stri
     },
     title: title,
     hasBeenViewed: false,
+    updatedTime: new Date(),
   };
   await ref.set(newNotification);
 }
@@ -33,6 +34,7 @@ export async function addCancelPostApplicationNotification(postId:string, poster
     },
     title: title,
     hasBeenViewed: false,
+    updatedTime: new Date(),
   };
   await ref.set(newNotification);
 }
@@ -50,6 +52,7 @@ export async function addAcceptPostApplicationNotification(postId:string, poster
     },
     title: title,
     hasBeenViewed: false,
+    updatedTime: new Date(),
   };
   await ref.set(newNotification);
 }
@@ -64,6 +67,7 @@ export async function addGenericNotification(userId: string, title: string, mess
     data: message,
     title: title,
     hasBeenViewed: false,
+    updatedTime: new Date(),
   };
   await ref.set(newNotification);
 }
@@ -76,14 +80,16 @@ export async function addDeletePostApplicationNotification(userId: string, title
     userId: userId,
     title: title,
     hasBeenViewed: false,
+    updatedTime: new Date(),
   };
   await ref.set(newNotification);
 }
 
-export async function getTokensAndSendMessage(title: string, uid: string) {
+export async function getTokensAndSendMessage( uid: string, title: string) {
   const userDoc = await db.users.doc(uid).get();
   const user = userDoc.data();
   const rawTokens = user?.tokens;
+  console.log(rawTokens);
   if (!rawTokens) {
     console.log("Cannot send notification to user as cannot find user");
     return;
