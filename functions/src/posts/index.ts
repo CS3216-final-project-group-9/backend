@@ -140,11 +140,8 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
       promises.push(updateCampaignForDeletedApplication(applicantData.userId, doc.id));
     });
     await Promise.all(promises);
-
-    // Email notification
     const post = await getPostFromFirestorePost(firestorePost);
     await notifyParticipantsHostCancelled(post, emailedApplicants);
-
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {
     console.error(e);

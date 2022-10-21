@@ -54,13 +54,16 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     // Add post application
     const applicationId = db.applicants.doc().id;
     await db.applicants.doc(applicationId).set(newApplication);
-    // Email notifications
-    const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user), updateCampaignForApplying(uid, applicationId)];
-    await Promise.all(promises);
-
     const message = "New Post Application";
-    await getTokensAndSendMessage(post.poster.id, message);
-    await addAppliedToPostNotification(postId, post.poster.id, uid, message);
+    // Email notifications
+    const promises = [
+      notifyPosterHasNewApplicant(post),
+      notifyApplicantSessionApplied(post, user),
+      updateCampaignForApplying(uid, applicationId),
+      getTokensAndSendMessage(post.poster.id, message),
+      addAppliedToPostNotification(postId, post.poster.id, uid, message),
+    ];
+    await Promise.all(promises);
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
     console.error(e);

@@ -70,27 +70,14 @@ export const sendNotificationToken = functions.region("asia-southeast2").https.o
     if (!user) {
       throw new functions.https.HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
     }
-
-    const rawToken = data.tokens;
-
+    const rawToken = data.token;
+    const token = rawToken as string;
     if (!(rawToken instanceof String)) {
       throw new functions.https.HttpsError("invalid-argument", CustomErrorCode.TOKEN_INPUT_NOT_FOUND);
     }
-    const token = rawToken as string;
-
-    if (!user.tokens) {
-      await db.users.doc(uid).set(
-          {
-            tokens: [],
-          },
-          {merge: true});
-    }
-
     await unTypedFirestore.collection("users").doc(uid).set({
       tokens: FieldValue.arrayUnion(token),
     });
-
-
     return {success: true, message: "Add token successfully"};
   } catch (e) {
     console.error(e);

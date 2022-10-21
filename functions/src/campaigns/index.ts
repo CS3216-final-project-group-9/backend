@@ -5,25 +5,29 @@ import {HttpsError} from "firebase-functions/v1/https";
 import {FieldValue} from "firebase-admin/firestore";
 import {FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
-import {createAppliedRequest, getAppliedPostsFromFirestore} from "../posts/getCustomPost";
+import {getAppliedPostsFromFirestore} from "../posts/getCustomPost";
 import {AppliedRequest, CampaignChance} from "../type/postApplication";
 import {parseCampaignFromFirestore} from "../utils/type-converter";
 import {Campaign} from "../type/campaign";
 
 async function checkHasExceededLimitForStudySessions(userId: string, date: Date) {
+  console.log(14, userId, date);
   const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", "==", true).get();
   const recordedApplicants = await db.applicants.where("userId", "==", userId).where("campaignChances", ">", CampaignChance.NOT_RECORDED).get();
   const totalLen = recordedPosts.size + recordedApplicants.size;
   if (totalLen > 1) {
+    console.log(18);
     return true;
   }
   const filteredPosts = recordedPosts.docs.filter((doc) => {
     const data = doc.data();
-    const start = data.startDateTime;
+    const start = (data.startDateTime as any).toDate();
+    console.log(start);
     const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
   if (filteredPosts.length > 0) {
+    console.log(28);
     return true;
   }
   const appliedRequests = await getAppliedPostsFromFirestore(recordedApplicants);
@@ -32,6 +36,7 @@ async function checkHasExceededLimitForStudySessions(userId: string, date: Date)
     const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
+  console.log(37, filteredApplicants.length);
   return filteredApplicants.length > 0;
 }
 
@@ -47,13 +52,16 @@ export const updateCampaignForSession = async function(userId: string, postId: s
   const postDoc = await postRef.get();
   const postData = postDoc.data();
   if (!postData) {
+    console.log(50, userId, postId);
     return;
   }
   if (postData.hasBeenUsedForCampaign) {
+    console.log(54, userId, postId);
     return;
   }
   const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId, postData.startDateTime);
   if (hasExceededLimit) {
+    console.log(59, userId, postId);
     return;
   }
   batch.update(campaignRef, {chances: FieldValue.increment(1)});
