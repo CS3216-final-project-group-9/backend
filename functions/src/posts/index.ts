@@ -133,12 +133,13 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const batch = unTypedFirestore.batch();
 
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
-    const promises = [batch.commit(), updateCampaignForSessionDeleted(uid, firestorePost)];
+    const promises: any[] = [updateCampaignForSessionDeleted(uid, firestorePost)];
     applicantDoc.forEach((doc) => {
       const applicantData = doc.data();
       batch.delete(doc.ref);
       promises.push(updateCampaignForDeletedApplication(applicantData.userId, applicantData));
     });
+    promises.push(batch.commit());
     await Promise.all(promises);
     const post = await getPostFromFirestorePost(firestorePost);
     await notifyParticipantsHostCancelled(post, emailedApplicants);

@@ -11,7 +11,8 @@ export type Campaign = {
   }
 
 export enum CampaignChance {
-    NOT_RECORDED,
-    RECORDED_CREATE,
-    RECORDED_ACCEPT
+  NOT_RECORDED,
+  RECORDED_CREATE,
+  RECORDED_ACCEPT,
+  RECORDED_ACCEPT_AND_CREATE
 }

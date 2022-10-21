@@ -56,7 +56,6 @@ export type FirestoreCustomPost = {
     posterId: string;
     startDateTime: Date;
     endDateTime: Date;
-    /** List of users who have been confirmed to be going for the post event */
     location: PostLocation;
     description: string;
     hasBeenUsedForCampaign?: CampaignChance | undefined;

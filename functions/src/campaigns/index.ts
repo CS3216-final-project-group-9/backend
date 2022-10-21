@@ -6,15 +6,20 @@ import {FieldValue} from "firebase-admin/firestore";
 import {FirestoreCustomApplicant, FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
 import {createAppliedRequest, getAppliedPostsFromFirestore} from "../posts/getCustomPost";
-import {AppliedRequest, AppliedRequestStatus} from "../type/postApplication";
+import {AppliedRequestStatus} from "../type/postApplication";
 import {parseCampaignFromFirestore} from "../utils/type-converter";
 import {Campaign, CampaignChance} from "../type/campaign";
 
 async function checkHasExceededLimitForStudySessions(userId: string, date: Date) {
   console.log(14, userId, date);
-  const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", ">", CampaignChance.NOT_RECORDED).get();
+  const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_CREATE).get();
   const recordedApplicants = await db.applicants.where("userId", "==", userId).where("campaignChances", ">", CampaignChance.NOT_RECORDED).get();
-  const totalLen = recordedPosts.size + recordedApplicants.size;
+  const filteredRecordedApplicants = recordedApplicants.docs.filter((doc) => {
+    const data = doc.data();
+    return data.campaignChances !== CampaignChance.RECORDED_ACCEPT;
+  });
+  console.log(recordedPosts.size, recordedApplicants.size);
+  const totalLen = recordedPosts.size + filteredRecordedApplicants.length;
   if (totalLen > 1) {
     console.log(18);
     return true;
@@ -60,6 +65,7 @@ export const updateCampaignForSession = async function(userId: string, postId: s
     return;
   }
   const start = (postData.startDateTime as any).toDate();
+  console.log(63, start);
   const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId, start);
   if (hasExceededLimit) {
     console.log(59, userId, postId);
@@ -70,9 +76,9 @@ export const updateCampaignForSession = async function(userId: string, postId: s
   await batch.commit();
 };
 
-async function checkHasExceededLimitForApplicant(applicantId: string, posterId: string, application: AppliedRequest) {
-  const postDate = moment(application.post.startDateTime);
-  const applicantCreditedPostsQuery = await db.applicants.where("userId", "==", applicantId).where("campaignChances", "==", CampaignChance.RECORDED_ACCEPT).get();
+async function checkHasExceededLimitForApplicant(applicantId: string, posterId: string, post: FirestoreCustomPost) {
+  const postDate = moment((post.startDateTime as any).toDate());
+  const applicantCreditedPostsQuery = await db.applicants.where("userId", "==", applicantId).where("campaignChances", ">=", CampaignChance.RECORDED_ACCEPT).get();
   const applicantCreditedPostsToday = [];
   const applicantCreditedPostsWithPoster = [];
 
@@ -97,7 +103,7 @@ async function checkHasExceededLimitForApplicant(applicantId: string, posterId: 
   }
 
   // Check credited applications made by `posterId` that were accepted by `applicantId`
-  const posterCreditedPostsQuery = await db.applicants.where("userId", "==", posterId).where("campaignChances", "==", CampaignChance.RECORDED_ACCEPT).get();
+  const posterCreditedPostsQuery = await db.applicants.where("userId", "==", posterId).where("campaignChances", ">=", CampaignChance.RECORDED_ACCEPT).get();
   const posterCreditedPostsWithApplicant = [];
   await Promise.all(posterCreditedPostsQuery.docs.map(async (application) => {
     const applicationData = application.data();
@@ -121,8 +127,10 @@ async function checkHasExceededLimitForApplicant(applicantId: string, posterId: 
   // Check posts made by `applicantId` that has already been credited
   const today = moment().startOf("day");
   const todayEnd = today.clone().endOf("day");
-  const query = await db.posts.where("posterId", "==", applicantId).where("startDateTime", ">=", today).where("endDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT).get();
-  if (query.size > 0) {
+  const query = await db.posts.where("posterId", "==", applicantId).where("startDateTime", ">=", today).where("startDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT).get();
+  const queryTwo = await db.posts.where("posterId", "==", applicantId).where("startDateTime", ">=", today).where("startDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT_AND_CREATE).get();
+  const combinedQuery = [...query.docs, ...queryTwo.docs];
+  if (combinedQuery.length > 0) {
     // applicant already received a chance from accepting someone in his other study session
     return true;
   }
@@ -131,11 +139,11 @@ async function checkHasExceededLimitForApplicant(applicantId: string, posterId: 
   return false;
 }
 
-async function checkHasExceededLimitForPoster(posterId: string, applicantId: string, application: AppliedRequest) {
-  const postDate = moment(application.post.startDateTime);
+async function checkHasExceededLimitForPoster(posterId: string, applicantId: string, post: FirestoreCustomPost) {
+  const postDate = moment((post.startDateTime as any).toDate());
 
   // Check credited applications made by `posterId` that were accepted
-  const posterCreditedPostsQuery = await db.applicants.where("userId", "==", posterId).where("campaignChances", "==", CampaignChance.RECORDED_ACCEPT).get();
+  const posterCreditedPostsQuery = await db.applicants.where("userId", "==", posterId).where("campaignChances", ">=", CampaignChance.RECORDED_ACCEPT).get();
   const posterCreditedPostsToday = [];
   const posterCreditedPostsWithApplicant = [];
   await Promise.all(posterCreditedPostsQuery.docs.map(async (application) => {
@@ -158,7 +166,7 @@ async function checkHasExceededLimitForPoster(posterId: string, applicantId: str
   }
 
   // Check credited applications made by `applicantId` that were accepted by `posterId`
-  const applicantCreditedPostsQuery = await db.applicants.where("userId", "==", applicantId).where("campaignChances", "==", CampaignChance.RECORDED_ACCEPT).get();
+  const applicantCreditedPostsQuery = await db.applicants.where("userId", "==", applicantId).where("campaignChances", ">=", CampaignChance.RECORDED_ACCEPT).get();
   const applicantCreditedPostsWithPoster = [];
   await Promise.all(applicantCreditedPostsQuery.docs.map(async (application) => {
     const applicationData = application.data();
@@ -182,23 +190,25 @@ async function checkHasExceededLimitForPoster(posterId: string, applicantId: str
   // Check posts made by `posterId` that has already been credited
   const today = moment().startOf("day");
   const todayEnd = today.clone().endOf("day");
-  const query = await db.posts.where("posterId", "==", posterId).where("startDateTime", ">=", today).where("endDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT).get();
-  if (query.size > 0) {
+  const query = await db.posts.where("posterId", "==", posterId).where("startDateTime", ">=", today).where("startDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT).get();
+  const queryTwo = await db.posts.where("posterId", "==", posterId).where("startDateTime", ">=", today).where("startDateTime", "<=", todayEnd).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_ACCEPT_AND_CREATE).get();
+  const combinedQuery = [...query.docs, ...queryTwo.docs];
+  if (combinedQuery.length > 0) {
     // poster already received a chance from accepting someone in his other study session today
     return true;
   }
   return false;
 }
 
-async function checkHasExceededLimitForStudyApplications(applicantId: string, posterId: string, application: AppliedRequest) {
+async function checkHasExceededLimitForStudyApplications(applicantId: string, posterId: string, post: FirestoreCustomPost) {
   const returnValue = {hasExceededLimitPoster: false, hasExceededLimitApplicant: false};
-  returnValue.hasExceededLimitApplicant = await checkHasExceededLimitForApplicant(applicantId, posterId, application);
-  returnValue.hasExceededLimitPoster = await checkHasExceededLimitForPoster(posterId, applicantId, application);
+  returnValue.hasExceededLimitApplicant = await checkHasExceededLimitForApplicant(applicantId, posterId, post);
+  returnValue.hasExceededLimitPoster = await checkHasExceededLimitForPoster(posterId, applicantId, post);
   return returnValue;
 }
 
-export const updateCampaignForAcceptedApplication = async function(applicantId: string, posterId: string, applicationId: string, application: AppliedRequest) {
-  const {hasExceededLimitPoster, hasExceededLimitApplicant} = await checkHasExceededLimitForStudyApplications(applicantId, posterId, application);
+export const updateCampaignForAcceptedApplication = async function(applicantId: string, posterId: string, applicationId: string, postId: string, post: FirestoreCustomPost, application: FirestoreCustomApplicant) {
+  const {hasExceededLimitPoster, hasExceededLimitApplicant} = await checkHasExceededLimitForStudyApplications(applicantId, posterId, post);
   if (hasExceededLimitPoster && hasExceededLimitApplicant) {
     return;
   }
@@ -206,14 +216,17 @@ export const updateCampaignForAcceptedApplication = async function(applicantId: 
   const posterCampaignRef = db.campaigns.doc(posterId);
   const applicantCampaignRef = db.campaigns.doc(applicantId);
   const applicationRef = db.applicants.doc(applicationId);
-  if (!hasExceededLimitPoster) {
-    const postRef = db.posts.doc(application.post.id);
+  const alreadyRecordedAccept = post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT || post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT_AND_CREATE;
+  if (!hasExceededLimitPoster && !alreadyRecordedAccept) {
+    const postRef = db.posts.doc(postId);
+    const newCampaignValue = post.hasBeenUsedForCampaign === CampaignChance.RECORDED_CREATE ? CampaignChance.RECORDED_ACCEPT_AND_CREATE : CampaignChance.RECORDED_ACCEPT;
     batch.update(posterCampaignRef, {chances: FieldValue.increment(1)});
-    batch.update(postRef, {hasBeenUsedForCampaign: CampaignChance.RECORDED_ACCEPT});
+    batch.update(postRef, {hasBeenUsedForCampaign: newCampaignValue});
   }
   if (!hasExceededLimitApplicant) {
     batch.update(applicantCampaignRef, {chances: FieldValue.increment(1)});
-    batch.update(applicationRef, {"campaignChances": CampaignChance.RECORDED_ACCEPT});
+    const newCampaignValue = application.campaignChances === CampaignChance.RECORDED_CREATE ? CampaignChance.RECORDED_ACCEPT_AND_CREATE : CampaignChance.RECORDED_ACCEPT;
+    batch.update(applicationRef, {"campaignChances": newCampaignValue});
   }
   return batch.commit();
 };
@@ -260,11 +273,12 @@ export const updateCampaignForDeletedApplication = async function(userId: string
   if (!application.campaignChances) {
     return;
   }
-  const chances = application.campaignChances as number;
+  const chances = application.campaignChances as CampaignChance;
   if (chances === CampaignChance.NOT_RECORDED) {
     return;
   }
-  return db.campaigns.doc(userId).update({chances: FieldValue.increment(-chances)});
+  const decrementValue = chances === CampaignChance.RECORDED_ACCEPT ? 1 : chances === CampaignChance.RECORDED_ACCEPT_AND_CREATE? 2 : chances;
+  return db.campaigns.doc(userId).update({chances: FieldValue.increment(-decrementValue)});
 };
 
 /**
@@ -276,7 +290,8 @@ export const updateCampaignForSessionDeleted = async function(userId: string, po
   if (!post.hasBeenUsedForCampaign) {
     return;
   }
-  return unTypedFirestore.collection("campaigns").doc(userId).update({chances: FieldValue.increment(-post.hasBeenUsedForCampaign)});
+  const decrementValue = post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT || post.hasBeenUsedForCampaign === CampaignChance.RECORDED_CREATE ? 1 : post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT_AND_CREATE ? 2 : post.hasBeenUsedForCampaign;
+  return unTypedFirestore.collection("campaigns").doc(userId).update({chances: FieldValue.increment(-decrementValue)});
 };
 
 export const addCampaignsToExistingUsers = functions.region("asia-southeast2").pubsub.schedule("15 17 * * *").timeZone("Asia/Singapore").onRun(async () => {

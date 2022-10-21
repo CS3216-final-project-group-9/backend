@@ -9,7 +9,6 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
-import {createAppliedRequest} from "../posts/getCustomPost";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -173,14 +172,16 @@ export const responsePostApplication = functions.region("asia-southeast2").https
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
       const applicantMessage = "You have been accepted to post";
-      const appliedRequest = await createAppliedRequest(postId, AppliedRequestStatus.ACCEPTED);
-      if (!appliedRequest) {
+      const postDoc = await db.posts.doc(postId).get();
+      const postData = postDoc.data();
+      const applicationData = applicationDoc.data();
+      if (!postData) {
         return {success: false,
           message: "Unexpected error: Couldnt get applied request"};
       }
       const promises = [
         notifyParticipantHostAccepted(post, participant),
-        updateCampaignForAcceptedApplication(applicantId, uid, applicationId, appliedRequest),
+        updateCampaignForAcceptedApplication(applicantId, uid, applicationId, postId, postData, applicationData),
         getTokensAndSendMessage(applicantId, applicantMessage),
         addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage)];
       await Promise.all(promises);
