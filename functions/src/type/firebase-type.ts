@@ -68,7 +68,8 @@ export interface FirestoreCustomNotification {
     hasBeenViewed: boolean,
     otherUserId?: string // the user related to ur notification. eg: user who applied to your post
     title?: string,
-    data?: FirestoreCustomAppliedRequest | FirestoreCustomCreatedRequest | string
+    data?: FirestoreCustomAppliedRequest | FirestoreCustomCreatedRequest | string,
+    updatedTime: Date
   }
 
 export interface FirestoreCustomCreatedRequest {

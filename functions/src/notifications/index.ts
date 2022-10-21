@@ -14,7 +14,7 @@ export const getNotifications = functions.region("asia-southeast2").https.onCall
       throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
 
-    const fireStoreNotifications = await db.notifications.where("userId", "==", uid).get();
+    const fireStoreNotifications = await db.notifications.where("userId", "==", uid).orderBy("updatedTime").get();
     const notifications: Notification[] = [];
 
     await Promise.all(fireStoreNotifications.docs.map( async (notiDoc) => {
@@ -38,13 +38,14 @@ export const markNotificationRead = functions.region("asia-southeast2").https.on
     }
 
 
-    const id = data.id;
+    const rawId = data.id;
+    const id = rawId as string;
 
-    if (!(id instanceof String)) {
+    if (!(typeof(id) == "string")) {
       throw new functions.https.HttpsError("invalid-argument", CustomErrorCode.NOTIFICATION_ID_INPUT_NOT_FOUND);
     }
 
-    await db.notifications.doc(uid).set(
+    await db.notifications.doc(id).set(
         {
           hasBeenViewed: true,
         },
