@@ -11,6 +11,7 @@ admin.initializeApp();
 // Need to use this for update array, as FieldValue cannot work with type
 export const unTypedFirestore = admin.firestore();
 
+export const cloudMessageAdmin = admin.messaging();
 // Type converter for Typescript
 // Reference : https://gist.github.com/JamieCurnow/cba3968a7f1e335d473632f9fc9f6e8b
 

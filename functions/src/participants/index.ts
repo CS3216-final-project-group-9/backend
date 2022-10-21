@@ -7,7 +7,7 @@ import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
-import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification} from "../notifications/createFirestoreNotification";
+import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
 import {createAppliedRequest} from "../posts/getCustomPost";
 
@@ -58,7 +58,9 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     const promises = [notifyPosterHasNewApplicant(post), notifyApplicantSessionApplied(post, user), updateCampaignForApplying(uid, applicationId)];
     await Promise.all(promises);
 
-    await addAppliedToPostNotification(postId, post.poster.id, uid, "New Post Application");
+    const message = "New Post Application";
+    await getTokensAndSendMessage(post.poster.id, message);
+    await addAppliedToPostNotification(postId, post.poster.id, uid, message);
     return {success: true, message: "Applied to post successfully"};
   } catch (e) {
     console.error(e);
@@ -93,6 +95,16 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
       batch.delete(doc.ref);
     });
     await batch.commit();
+    await notifyPosterApplicantCancelled(post);
+
+    const applicantMessage = "Your post application has been deleted";
+    await getTokensAndSendMessage(uid, applicantMessage);
+    await addDeletePostApplicationNotification(uid, applicantMessage);
+
+    const posterMessage = "Applicant has deleted post application";
+    await getTokensAndSendMessage(post.poster.id, posterMessage);
+    await addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage);
+
     const promises = [
       updateCampaignForDeletedApplication(uid, applicationId),
       notifyPosterApplicantCancelled(post),
@@ -154,6 +166,10 @@ export const responsePostApplication = functions.region("asia-southeast2").https
     });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
+      await notifyParticipantHostAccepted(post, participant);
+      const applicantMessage = "You have been accepted to post";
+      await getTokensAndSendMessage(applicantId, applicantMessage);
+      await addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage);
       const appliedRequest = await createAppliedRequest(postId, AppliedRequestStatus.ACCEPTED);
       if (!appliedRequest) {
         return {success: false,
