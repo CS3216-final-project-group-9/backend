@@ -12,19 +12,23 @@ import {Campaign, CampaignChance} from "../type/campaign";
 
 async function checkHasExceededLimitForStudySessions(userId: string, date: Date) {
   console.log(14, userId, date);
-  const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", "==", CampaignChance.RECORDED_CREATE).get();
+  const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", ">=", CampaignChance.RECORDED_CREATE).get();
+  const filteredRecordedPostsWithoutAccept = recordedPosts.docs.filter((doc) => {
+    const data = doc.data();
+    return data.hasBeenUsedForCampaign !== CampaignChance.RECORDED_ACCEPT;
+  });
   const recordedApplicants = await db.applicants.where("userId", "==", userId).where("campaignChances", ">", CampaignChance.NOT_RECORDED).get();
   const filteredRecordedApplicants = recordedApplicants.docs.filter((doc) => {
     const data = doc.data();
     return data.campaignChances !== CampaignChance.RECORDED_ACCEPT;
   });
-  console.log(recordedPosts.size, recordedApplicants.size);
-  const totalLen = recordedPosts.size + filteredRecordedApplicants.length;
+  console.log(filteredRecordedPostsWithoutAccept.length, recordedApplicants.size);
+  const totalLen = filteredRecordedPostsWithoutAccept.length + filteredRecordedApplicants.length;
   if (totalLen > 1) {
     console.log(18);
     return true;
   }
-  const filteredPosts = recordedPosts.docs.filter((doc) => {
+  const filteredPosts = filteredRecordedPostsWithoutAccept.filter((doc) => {
     const data = doc.data();
     const start = (data.startDateTime as any).toDate();
     console.log(start);
