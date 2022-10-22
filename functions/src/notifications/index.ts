@@ -20,8 +20,12 @@ export const getNotifications = functions.region("asia-southeast2").https.onCall
     await Promise.all(fireStoreNotifications.docs.map( async (notiDoc) => {
       const firestoreNoti = notiDoc.data();
       const notification = await parseFirestoreNotification(firestoreNoti);
-      if (notification) notifications.push(notification);
-    }));
+      return notification;
+    })).then((responses) => {
+      responses.map((response) => {
+        if (response) notifications.push(response);
+      });
+    });
     return {success: true, message: notifications};
   } catch (e) {
     console.error(e);

@@ -53,7 +53,7 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     // Add post application
     const applicationId = db.applicants.doc().id;
     await db.applicants.doc(applicationId).set(newApplication);
-    const message = "New Post Application";
+    const message = "New study session application";
     // Email notifications
     const promises = [
       notifyPosterHasNewApplicant(post),
@@ -103,8 +103,8 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     });
     await batch.commit();
 
-    const applicantMessage = "Your post application has been deleted";
-    const posterMessage = "Applicant has deleted post application";
+    const applicantMessage = "Your study session application has been deleted";
+    const posterMessage = "Applicant has deleted study session application";
 
     const promises = [
       updateCampaignForDeletedApplication(uid, applicationData),
@@ -171,7 +171,7 @@ export const responsePostApplication = functions.region("asia-southeast2").https
     });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
-      const applicantMessage = "You have been accepted to post";
+      const applicantMessage = "You have been accepted to study session";
       const postDoc = await db.posts.doc(postId).get();
       const postData = postDoc.data();
       const applicationData = applicationDoc.data();

@@ -169,22 +169,22 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     const uid = context.auth?.uid;
     let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
     const date = new Date();
-    if (uid) {
-      if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date)
-            .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      } else {
-        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
-            .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      }
+    // if (uid) {
+    if (location.length == 0) {
+      postSnapshot = await db.posts.where("endDateTime", ">=", date).orderBy("endDateTime")
+          .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
     } else {
-      if (location.length == 0) {
-        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      } else {
-        postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
-            .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-      }
+      postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime")
+          .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
     }
+    // } else {
+    //   if (location.length == 0) {
+    //     postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+    //   } else {
+    //     postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
+    //         .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+    //   }
+    // }
 
     const posts = await (await getPostsFromSnapshot(postSnapshot, uid?? "")).filter((post) => post.poster.id !== uid);
     return {success: true, message: posts};

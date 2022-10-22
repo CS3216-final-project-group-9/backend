@@ -34,9 +34,14 @@ export async function getPostsFromSnapshot(postSnapshot:FirebaseFirestore.QueryS
     const applicants = postObj.applicants.map((user) => user.id);
     const participants = postObj.postObject.participants.map((user) => user.id);
     if (!applicants.includes(uid) && !participants.includes(uid)) {
-      posts.push(postObj.postObject);
+      return postObj.postObject;
     }
-  }));
+    return null;
+  })).then((responses) => {
+    responses.map((response) => {
+      if (response) posts.push(response);
+    });
+  });
   return posts;
 }
 
