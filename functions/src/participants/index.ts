@@ -110,7 +110,7 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
       updateCampaignForDeletedApplication(uid, applicationData),
       notifyPosterApplicantCancelled(post),
       getTokensAndSendMessage(uid, applicantMessage),
-      addDeletePostApplicationNotification(post.poster.id, uid, applicantMessage),
+      addDeletePostApplicationNotification(postId, post.poster.id, uid, applicantMessage),
       getTokensAndSendMessage(post.poster.id, posterMessage),
       addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage),
     ];

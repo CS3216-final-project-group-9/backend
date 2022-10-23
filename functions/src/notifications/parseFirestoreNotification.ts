@@ -1,4 +1,5 @@
 import {db} from "../firebase";
+import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {createAppliedRequest, createCreatedRequest} from "../posts/getCustomPost";
 import {FirestoreCustomAppliedRequest, FirestoreCustomCreatedRequest, FirestoreCustomNotification} from "../type/firebase-type";
 import {NotificationType, Notification} from "../type/notification";
@@ -86,6 +87,14 @@ async function parseDeletePostApplicationNotification(firestoreNotification:Fire
   const userDoc = await db.users.doc(firestoreNotification.otherUserId).get();
   const firestoreUser = userDoc.data();
   if (!firestoreUser) return null;
+  if (!firestoreNotification.data) return null;
+
+  const postId = firestoreNotification.data as string;
+  const postDoc = await db.posts.doc(postId).get();
+  const firestorePost = postDoc.data();
+  if (!firestorePost) return null;
+  const post = await getPostFromFirestorePost(firestorePost);
+
   const user = parseUserFromFirestore(firestoreUser);
   const notification: Notification = {
     id: firestoreNotification.id,
@@ -93,6 +102,7 @@ async function parseDeletePostApplicationNotification(firestoreNotification:Fire
     hasBeenViewed: firestoreNotification.hasBeenViewed,
     title: firestoreNotification.title,
     otherUser: user,
+    data: post,
   };
   return notification;
 }

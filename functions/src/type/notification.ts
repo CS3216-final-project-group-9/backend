@@ -1,3 +1,4 @@
+import {Post} from "./post";
 import {AppliedRequest, CreatedRequest} from "./postApplication";
 import {User} from "./user";
 
@@ -15,6 +16,6 @@ export interface Notification {
     hasBeenViewed: boolean,
     otherUser?: User // the user related to ur notification. eg: user who applied to your post
     title?: string,
-    data?: AppliedRequest | CreatedRequest | string
+    data?: AppliedRequest | CreatedRequest | string | Post
 }
 

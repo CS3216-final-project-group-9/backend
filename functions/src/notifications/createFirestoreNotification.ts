@@ -72,7 +72,7 @@ export async function addGenericNotification(userId: string, title: string, mess
   await ref.set(newNotification);
 }
 
-export async function addDeletePostApplicationNotification(posterId: string, applicantId:string, title: string) {
+export async function addDeletePostApplicationNotification(postId:string, posterId: string, applicantId:string, title: string) {
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
@@ -81,6 +81,7 @@ export async function addDeletePostApplicationNotification(posterId: string, app
     otherUserId: posterId,
     title: title,
     hasBeenViewed: false,
+    data: postId,
     updatedTime: new Date(),
   };
   await ref.set(newNotification);
