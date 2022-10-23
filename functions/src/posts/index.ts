@@ -142,8 +142,8 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     applicantDoc.forEach((doc) => {
       const applicantData = doc.data();
 
-      promises.push(getTokensAndSendMessage(uid, applicantMessage));
-      promises.push(addDeletePostApplicationNotification(post, post.poster.id, uid, applicantMessage));
+      promises.push(getTokensAndSendMessage(applicantData.userId, applicantMessage));
+      promises.push(addDeletePostApplicationNotification(post, post.poster.id, applicantData.userId, applicantMessage));
       batch.delete(doc.ref);
       promises.push(updateCampaignForDeletedApplication(applicantData.userId, applicantData));
     });
