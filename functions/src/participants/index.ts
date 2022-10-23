@@ -53,7 +53,7 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     // Add post application
     const applicationId = db.applicants.doc().id;
     await db.applicants.doc(applicationId).set(newApplication);
-    const message = "New study session application";
+    const message = user.name + " has applied to the study session";
     // Email notifications
     const promises = [
       notifyPosterHasNewApplicant(post),
@@ -85,7 +85,7 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
       throw new functions.https
           .HttpsError("not-found", CustomErrorCode.POST_ID_INPUT_NOT_FOUND);
     }
-    const {post} = await getParticipantAndPost(uid, postId);
+    const {user: applicant, post} = await getParticipantAndPost(uid, postId);
     const participants = await db.applicants.where("postId", "==", postId).where("userId", "==", uid).get();
     if (participants.size !== 1) {
       throw new functions.https
@@ -98,12 +98,13 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     if (!applicationData) {
       return;
     }
+
     participants.forEach((doc) => {
       batch.delete(doc.ref);
     });
     await batch.commit();
 
-    const posterMessage = "Applicant has cancelled study session application";
+    const posterMessage = applicant.name + " has cancelled their study session application";
 
     const promises = [
       updateCampaignForDeletedApplication(uid, applicationData),
