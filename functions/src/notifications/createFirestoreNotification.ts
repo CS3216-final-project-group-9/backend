@@ -2,6 +2,7 @@
 import {cloudMessageAdmin, db} from "../firebase";
 import {FirestoreCustomNotification} from "../type/firebase-type";
 import {NotificationType} from "../type/notification";
+import {Post} from "../type/post";
 
 
 export async function addAppliedToPostNotification(postId:string, posterId: string, applicantId:string, title: string) {
@@ -72,7 +73,7 @@ export async function addGenericNotification(userId: string, title: string, mess
   await ref.set(newNotification);
 }
 
-export async function addDeletePostApplicationNotification(postId:string, posterId: string, applicantId:string, title: string) {
+export async function addDeletePostApplicationNotification(post:Post, posterId: string, applicantId:string, title: string) {
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
@@ -81,7 +82,9 @@ export async function addDeletePostApplicationNotification(postId:string, poster
     otherUserId: posterId,
     title: title,
     hasBeenViewed: false,
-    data: postId,
+    data: {
+      post: post,
+    },
     updatedTime: new Date(),
   };
   await ref.set(newNotification);

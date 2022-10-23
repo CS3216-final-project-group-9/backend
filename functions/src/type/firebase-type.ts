@@ -1,5 +1,5 @@
 import {Gender, Faculty} from "./user";
-import {PostLocation} from "./post";
+import {Post, PostLocation} from "./post";
 import {AppliedRequestStatus} from "./postApplication";
 import {NotificationType} from "./notification";
 import {CampaignChance} from "./campaign";
@@ -68,7 +68,7 @@ export interface FirestoreCustomNotification {
     hasBeenViewed: boolean,
     otherUserId?: string // the user related to ur notification. eg: user who applied to your post
     title?: string,
-    data?: FirestoreCustomAppliedRequest | FirestoreCustomCreatedRequest | string,
+    data?: FirestoreCustomAppliedRequest | FirestoreCustomCreatedRequest | string | FirestoreCustomOldPost,
     updatedTime: Date
   }
 
@@ -80,4 +80,8 @@ export interface FirestoreCustomAppliedRequest {
     userId: string,
     postId: string
   }
+
+export interface FirestoreCustomOldPost {
+  post: Post
+}
 

@@ -18,6 +18,7 @@ import {
 import * as CustomErrorCode from "../utils/errorCode";
 import {getAppliedPostsFromFirestore, getCreatedPostsFromFirestore} from "./getCustomPost";
 import {updateCampaignForDeletedApplication, updateCampaignForSession, updateCampaignForSessionDeleted} from "../campaigns";
+import {addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 
 
 const POST_PER_PAGE = 20;
@@ -115,6 +116,8 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
           .HttpsError("permission-denied", CustomErrorCode.USER_NOT_POST_AUTHOR);
     }
 
+    const post = await getPostFromFirestorePost(firestorePost);
+
     await db.posts.doc(postId).delete();
 
     const emailedApplicantDoc = await db.applicants.where("postId", "==", postId)
@@ -133,15 +136,19 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const batch = unTypedFirestore.batch();
 
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
+    const applicantMessage = "The study session you applied for has been deleted";
+
     const promises: any[] = [updateCampaignForSessionDeleted(uid, firestorePost)];
     applicantDoc.forEach((doc) => {
       const applicantData = doc.data();
+
+      promises.push(getTokensAndSendMessage(uid, applicantMessage));
+      promises.push(addDeletePostApplicationNotification(post, post.poster.id, uid, applicantMessage));
       batch.delete(doc.ref);
       promises.push(updateCampaignForDeletedApplication(applicantData.userId, applicantData));
     });
     promises.push(batch.commit());
     await Promise.all(promises);
-    const post = await getPostFromFirestorePost(firestorePost);
     await notifyParticipantsHostCancelled(post, emailedApplicants);
     return {success: true, message: "Post deleted successfully"};
   } catch (e) {

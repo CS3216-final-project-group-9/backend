@@ -7,7 +7,7 @@ import {parseUserFromFirestore} from "../utils/type-converter";
 import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
-import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
+import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
@@ -103,14 +103,11 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     });
     await batch.commit();
 
-    const applicantMessage = "Your study session application has been deleted";
-    const posterMessage = "Applicant has deleted study session application";
+    const posterMessage = "Applicant has cancelled study session application";
 
     const promises = [
       updateCampaignForDeletedApplication(uid, applicationData),
       notifyPosterApplicantCancelled(post),
-      getTokensAndSendMessage(uid, applicantMessage),
-      addDeletePostApplicationNotification(postId, post.poster.id, uid, applicantMessage),
       getTokensAndSendMessage(post.poster.id, posterMessage),
       addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage),
     ];
