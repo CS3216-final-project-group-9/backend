@@ -2,6 +2,7 @@ import {db} from "../firebase";
 import {createAppliedRequest, createCreatedRequest} from "../posts/getCustomPost";
 import {FirestoreCustomAppliedRequest, FirestoreCustomCreatedRequest, FirestoreCustomNotification} from "../type/firebase-type";
 import {NotificationType, Notification} from "../type/notification";
+import {parseUserFromFirestore} from "../utils/type-converter";
 
 
 export async function parseFirestoreNotification(firestoreNotification:FirestoreCustomNotification) {
@@ -34,13 +35,13 @@ async function parseAcceptedApplicationNotification(firestoreNotification:Firest
 
   if (!appliedRequest) return null;
 
-
   const notification: Notification = {
     id: firestoreNotification.id,
     type: NotificationType.ACCEPTED_YOUR_APPLICATION,
     hasBeenViewed: firestoreNotification.hasBeenViewed,
     title: firestoreNotification.title ? firestoreNotification.title:undefined,
     data: appliedRequest,
+    otherUser: appliedRequest.post.poster,
   };
   return notification;
 }
@@ -81,11 +82,17 @@ async function parseGenericNotification(firestoreNotification:FirestoreCustomNot
 }
 
 async function parseDeletePostApplicationNotification(firestoreNotification:FirestoreCustomNotification) {
+  if (!firestoreNotification.otherUserId) return null;
+  const userDoc = await db.users.doc(firestoreNotification.otherUserId).get();
+  const firestoreUser = userDoc.data();
+  if (!firestoreUser) return null;
+  const user = parseUserFromFirestore(firestoreUser);
   const notification: Notification = {
     id: firestoreNotification.id,
     type: firestoreNotification.type,
     hasBeenViewed: firestoreNotification.hasBeenViewed,
     title: firestoreNotification.title,
+    otherUser: user,
   };
   return notification;
 }
