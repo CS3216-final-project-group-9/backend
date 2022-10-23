@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import * as CustomErrorCode from "../utils/errorCode";
 import {HttpsError} from "firebase-functions/v1/https";
 import {FieldValue} from "firebase-admin/firestore";
-import {FirestoreCustomApplicant, FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost} from "../type/firebase-type";
+import {FirestoreCustomApplicant, FirestoreCustomCampaign, FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
 import {createAppliedRequest, getAppliedPostsFromFirestore} from "../posts/getCustomPost";
 import {AppliedRequestStatus} from "../type/postApplication";
@@ -297,39 +297,6 @@ export const updateCampaignForSessionDeleted = async function(userId: string, po
   const decrementValue = post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT || post.hasBeenUsedForCampaign === CampaignChance.RECORDED_CREATE ? 1 : post.hasBeenUsedForCampaign === CampaignChance.RECORDED_ACCEPT_AND_CREATE ? 2 : post.hasBeenUsedForCampaign;
   return unTypedFirestore.collection("campaigns").doc(userId).update({chances: FieldValue.increment(-decrementValue)});
 };
-
-export const addCampaignsToExistingUsers = functions.region("asia-southeast2").pubsub.schedule("15 17 * * *").timeZone("Asia/Singapore").onRun(async () => {
-  const users = await db.users.get();
-  const batch = unTypedFirestore.batch();
-  const campaignName = "LAUNCH";
-  const defaultCampaign: FirestoreCustomCampaign = {
-    id: "",
-    userId: "",
-    chances: 1,
-    campaignId: campaignName,
-  };
-  for (const user of users.docs) {
-    const campaignUserObject = {...defaultCampaign};
-    const uid = user.id;
-    campaignUserObject.id = uid;
-    campaignUserObject.userId = uid;
-    const newRef = db.campaigns.doc(uid);
-    batch.set(newRef, campaignUserObject);
-  }
-  const startDate = moment().utcOffset(8).startOf("day");
-  const endDate = startDate.clone().add(14, "days").endOf("day");
-  const campaignDetails: FirestoreCustomCampaignDetails = {
-    description: "To celebrate BuddyNUS's launch, stand a chance to earn $50! Get more chances of winning by creating study sessions, applying for study sessions, being accepted for a study session or sharing our post on Instagram. Winners will be announced on 4th November. For more details, visit our instagram at @buddynus.official!",
-    title: "Launch giveaway!",
-    tncs: "",
-    image: "https://firebasestorage.googleapis.com/v0/b/cs3216-final-group-9.appspot.com/o/assets%2Fgiveaway.jpg?alt=media&token=9d0e39fc-cbd3-4881-b6f1-2517f7d8e561",
-    startDateTime: startDate.toDate(),
-    endDateTime: endDate.toDate(),
-  };
-  const campaignRef = db.campaignDetails.doc(campaignName);
-  batch.set(campaignRef, campaignDetails);
-  return batch.commit();
-});
 
 export const getUserCampaigns = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {

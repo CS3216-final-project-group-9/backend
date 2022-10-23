@@ -34,4 +34,3 @@ export const deletePostApplication = participants.deletePostApplication;
 
 // Campaigns
 export const getUserCampaigns = campaigns.getUserCampaigns;
-export const addCampaignsToExistingUsers = campaigns.addCampaignsToExistingUsers;
