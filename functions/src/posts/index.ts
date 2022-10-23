@@ -136,7 +136,7 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const batch = unTypedFirestore.batch();
 
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
-    const applicantMessage = "The study session you applied for has been deleted";
+    const applicantMessage = "The study session you applied for has been cancelled";
 
     const promises: any[] = [updateCampaignForSessionDeleted(uid, firestorePost)];
     applicantDoc.forEach((doc) => {
