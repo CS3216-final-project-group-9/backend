@@ -3,6 +3,8 @@ import * as participants from "./participants";
 import * as posts from "./posts";
 import * as notification from "./notifications";
 import * as campaigns from "./campaigns";
+import * as webhook from "./texttoimage/webhook";
+import * as textToImage from "./texttoimage";
 
 // Users
 export const createUser = users.createUser;
@@ -34,3 +36,8 @@ export const deletePostApplication = participants.deletePostApplication;
 
 // Campaigns
 export const getUserCampaigns = campaigns.getUserCampaigns;
+
+// Image webhook
+
+export const storeImage = webhook.storeImage;
+export const getImage = textToImage.getImage;
