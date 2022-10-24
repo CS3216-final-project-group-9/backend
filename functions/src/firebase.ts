@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import {FirestoreCustomApplicant,
+  FirestoreCustomArt,
   FirestoreCustomCampaign,
   FirestoreCustomCampaignDetails,
   FirestoreCustomNotification,
@@ -34,6 +35,7 @@ const db = {
   applicants: dataPoint<FirestoreCustomApplicant>("applicants"),
   mail: dataPoint<FirestoreMail>("mail"),
   notifications: dataPoint<FirestoreCustomNotification>("notifications"),
+  art: dataPoint<FirestoreCustomArt>("art"),
 };
 
 export {admin, db};

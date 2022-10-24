@@ -1,19 +1,24 @@
 import * as functions from "firebase-functions";
 import axiosObj = require("axios");
-const API_KEY = "";
+import {AIImageTrigger} from "../type/ImageTrigger";
 const url = "https://api.replicate.com/v1/predictions";
-const webhook = "https://asia-southeast2-cs3216-final-group-9.cloudfunctions.net/storeImage";
+const webhook = "https://asia-southeast2-cs3216-final-group-9.cloudfunctions.net/storeImage/image";
+const MODEL_VERSION = "cc201941f43a4b6299d31f28a9745f2c33523b9d78a92cf7261fcab3fc36fd37";
+const config = functions.config();
+const API_KEY =config.replicate.key;
 
-async function textToImage(prompts: string[]) {
-  const inputString = prompts.join(' ');
+async function textToImage(prompt: string, userId: string, trigger: AIImageTrigger, source: string) {
   const axios = axiosObj as any;
   const {data} = await axios.post(
       url,
       {
         input: {
-          prompt: inputString,
+          prompt,
+          width: 512,
+          height: 256,
+          num_inference_steps: 301,
         },
-        version: "cc201941f43a4b6299d31f28a9745f2c33523b9d78a92cf7261fcab3fc36fd37",
+        version: MODEL_VERSION,
         webhook_completed: webhook,
       },
       {
@@ -23,13 +28,11 @@ async function textToImage(prompts: string[]) {
         },
       }
   );
-  console.log(26);
-  console.log(JSON.stringify(data));
 }
 
 
-export const getImage = functions.region("asia-southeast2").pubsub.schedule("45 13 * * *").timeZone("Asia/Singapore").onRun(() => {
+export const getImage = functions.region("asia-southeast2").pubsub.schedule("55 15 * * *").timeZone("Asia/Singapore").onRun(() => {
   console.log('getimage called');
-  const prompts = ['Skyline', 'At', 'New', 'York'];
+  const prompts = 'Beautiful digital matte painting skyline at new york';
   return textToImage(prompts);
 });
