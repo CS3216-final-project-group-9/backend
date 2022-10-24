@@ -2,7 +2,7 @@ export const goodWords = [
   "city",
   "sci-fi",
   "fantasy",
-  "beautitful",
+  "beautiful",
   "anime",
   "steampunk",
   "girl",
