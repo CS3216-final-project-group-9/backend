@@ -9,6 +9,7 @@ import {colors} from "./ai_words/colors";
 import {commonWords} from "./ai_words/common_words";
 import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
+import { goodWords } from "./ai_words/goodWords";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
   const today = moment().startOf('day');
@@ -85,10 +86,8 @@ export const uploadImageToDb = async function uploadImageToDb(id: string, url: s
   const ref = db.art.doc(id);
   return ref.update({image: url});
 };
-const specificObjects = animals
-    .concat(colors)
-    .concat(commonWords)
-    .concat(pokemon);
+
+const specificObjects = animals.concat(colors).concat(pokemon);
 
 enum Tier {
   ONE = 0,
@@ -98,9 +97,17 @@ enum Tier {
 
 const artStyleCutProb = 0.2;
 
-export const getInputStringForAi = function getAIString() {
+function chooseGoodWordOrOther(other: string[]) {
+  return Math.random() > 0.2
+    ? goodWords[Math.floor(Math.random() * goodWords.length)] + ' '
+    : other[Math.floor(Math.random() * other.length)] + ' ';
+}
+
+function getAIString() {
   const randomNum = Math.random();
+
   let tier = Tier.ONE;
+
   if (randomNum > Tier.THREE) {
     tier = Tier.THREE;
   } else if (randomNum > Tier.TWO) {
@@ -111,30 +118,27 @@ export const getInputStringForAi = function getAIString() {
 
   // tier 1
   // choose 1 random specific object
-  randomStr +=
-    specificObjects[Math.floor(Math.random() * specificObjects.length)];
+  randomStr += chooseGoodWordOrOther(specificObjects);
 
   // choose 1 common word
-  randomStr += commonWords[Math.floor(Math.random() * commonWords.length)];
+  randomStr += chooseGoodWordOrOther(commonWords);
 
   // tier 2
   if (tier >= Tier.TWO) {
     // choose 1 more common word
-    randomStr += commonWords[Math.floor(Math.random() * commonWords.length)];
+    randomStr += chooseGoodWordOrOther(commonWords);
   }
 
   // tier 3
   if (tier >= Tier.THREE) {
     // choose 1 more specific object
-    randomStr +=
-      specificObjects[Math.floor(Math.random() * specificObjects.length)];
+    randomStr += chooseGoodWordOrOther(specificObjects);
   }
 
   // randomly decide if should add art style
   if (Math.random() <= artStyleCutProb) {
-    randomStr += styles[Math.random()];
+    randomStr += styles[Math.floor(Math.random() * styles.length)] + ' ';
   }
 
   return randomStr;
-};
-
+}
