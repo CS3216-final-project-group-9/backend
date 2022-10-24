@@ -9,13 +9,13 @@ import {commonWords} from "./ai_words/common_words";
 import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
+import moment = require("moment");
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
-  // const today = moment().startOf('day');
-  // const todayEnd = today.clone().endOf('day');
-  // const art = await db.art.where('userId', '==', uid).where('date', '<=', todayEnd).where('date', '>=', today).get();
-  // return art.size > 0;
-  return false;
+  const today = moment().startOf('day');
+  const todayEnd = today.clone().endOf('day');
+  const art = await db.art.where('userId', '==', uid).where('date', '<=', todayEnd).where('date', '>=', today).get();
+  return art.size > 0;
 };
 
 /**
