@@ -21,6 +21,7 @@ import {updateCampaignForDeletedApplication, updateCampaignForSession, updateCam
 import {addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
+import {getUserArt} from "../art";
 
 
 const POST_PER_PAGE = 20;
@@ -33,11 +34,12 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
     }
 
     const userDoc = await db.users.doc(uid).get();
+    const art = await getUserArt(uid);
     const firestoreUser = userDoc.data();
     if (!firestoreUser) {
       throw new functions.https.HttpsError("not-found", CustomErrorCode.CURRENT_USER_PROFILE_NOT_IN_DB);
     }
-    const user = parseUserFromFirestore(firestoreUser);
+    const user = parseUserFromFirestore(firestoreUser, art);
 
     const {post: postRaw} = data;
 
@@ -129,10 +131,12 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const emailedApplicants: User[] = [];
     await Promise.all(emailedApplicantDoc.docs.map(async (applicantDoc) => {
       const applicant = applicantDoc.data();
-      const user = await db.users.doc(applicant.userId).get();
+      const promises = await Promise.all([db.users.doc(applicant.userId).get(), getUserArt(applicant.userId)]);
+      const user = promises[0];
+      const art = promises[1];
       const docData = user.data();
       if (docData) {
-        emailedApplicants.push(parseUserFromFirestore(docData));
+        emailedApplicants.push(parseUserFromFirestore(docData, art));
       }
     }));
     const batch = unTypedFirestore.batch();

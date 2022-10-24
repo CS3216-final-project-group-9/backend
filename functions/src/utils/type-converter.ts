@@ -5,6 +5,7 @@ import moment = require("moment");
 import {Campaign} from "../type/campaign";
 import {AIImageTrigger} from "../type/ImageTrigger";
 import {Art} from "../type/art";
+import {getUserArt} from "../art";
 
 export function parseFirestoreArtToArt(art: FirestoreCustomArt, id :string) {
   if (!art.image) {
@@ -52,7 +53,7 @@ export function parseUserToFirestore(user: User) {
   return parsedUser;
 }
 
-export function parseUserFromFirestore(firestoreUser: FirestoreCustomUser) {
+export function parseUserFromFirestore(firestoreUser: FirestoreCustomUser, art: Art[]) {
   const parsedUser: User = {
     id: firestoreUser.id,
     name: firestoreUser.name,
@@ -62,6 +63,7 @@ export function parseUserFromFirestore(firestoreUser: FirestoreCustomUser) {
     telegramHandle: firestoreUser.telegramHandle,
     profilePhoto: firestoreUser.profilePhoto,
     thumbnailPhoto: firestoreUser.thumbnailPhoto,
+    art: art,
   };
   return parsedUser;
 }
@@ -90,18 +92,23 @@ export function parseCampaignFromFirestore(firestoreCampaign: FirestoreCustomCam
   } as Campaign;
 }
 
-export function parsePostFromFirestore(
+export async function parsePostFromFirestore(
     firestorePost: FirestoreCustomPost,
     firestorePoster: FirestoreCustomUser,
-    firestoreParticipants: FirestoreCustomUser[]) {
+    firestoreParticipants: FirestoreCustomUser[],
+) {
+  const firestorePosterArt = await getUserArt(firestorePoster.id);
+  const participantArt = await Promise.all(firestoreParticipants.map((participant) => {
+    return getUserArt(participant.id);
+  }));
   const parsedPost: Post = {
     id: firestorePost.id,
     description: firestorePost.description,
-    poster: parseUserFromFirestore(firestorePoster),
+    poster: parseUserFromFirestore(firestorePoster, firestorePosterArt),
     startDateTime: (firestorePost.startDateTime as any).toDate().toISOString(),
     endDateTime: (firestorePost.endDateTime as any).toDate().toISOString(),
-    participants: Array.from(firestoreParticipants, (participant) => {
-      return parseUserFromFirestore(participant);
+    participants: Array.from(firestoreParticipants, (participant, i) => {
+      return parseUserFromFirestore(participant, participantArt[i]);
     }),
     location: firestorePost.location,
   };

@@ -116,7 +116,7 @@ export async function sendCloudMessage(title: string, registrationToken: string)
     };
 
     await cloudMessageAdmin.send(cloudMessage);
-  } catch (e) {
-    console.log(e);
+  } catch {
+    console.log('error');
   }
 }

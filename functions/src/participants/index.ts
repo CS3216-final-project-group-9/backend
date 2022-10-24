@@ -11,6 +11,9 @@ import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addC
 import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
+import {getUserArt} from "../art";
+import {DocumentSnapshot} from "firebase-admin/firestore";
+import {Art} from "../type/art";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -202,10 +205,11 @@ export const responsePostApplication = functions.region("asia-southeast2").https
 });
 
 async function getParticipantAndPost(userId:string, postId: string) {
-  const promises = [db.posts.doc(postId).get(), db.users.doc(userId).get()];
+  const promises = [db.posts.doc(postId).get(), db.users.doc(userId).get(), getUserArt(userId)];
   const docs = await Promise.all(promises);
-  const postDoc = docs[0];
-  const userDoc = docs[1];
+  const postDoc = docs[0] as DocumentSnapshot;
+  const userDoc = docs[1] as DocumentSnapshot;
+  const art = docs[2] as Art[];
   if (!postDoc.exists && !userDoc.exists) {
     throw new functions.https
         .HttpsError("not-found", CustomErrorCode.USER_AND_POST_NOT_IN_DB);
@@ -222,6 +226,6 @@ async function getParticipantAndPost(userId:string, postId: string) {
         .HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
   }
   const post = await getPostFromFirestorePost(firestorePost);
-  const user = parseUserFromFirestore(firestoreUser);
+  const user = parseUserFromFirestore(firestoreUser, art);
   return {user, post};
 }

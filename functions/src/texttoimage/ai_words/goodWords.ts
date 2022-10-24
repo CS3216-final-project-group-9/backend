@@ -20,4 +20,4 @@ export const goodWords = [
   "vampire",
   "werewolf",
   "metallic",
-]
+];

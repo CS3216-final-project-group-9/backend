@@ -1,4 +1,3 @@
-import moment = require("moment-timezone")
 import {db, storage} from "../firebase";
 import axiosObj = require("axios");
 import path = require("path");
@@ -9,13 +8,14 @@ import {colors} from "./ai_words/colors";
 import {commonWords} from "./ai_words/common_words";
 import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
-import { goodWords } from "./ai_words/goodWords";
+import {goodWords} from "./ai_words/goodWords";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
-  const today = moment().startOf('day');
-  const todayEnd = today.clone().endOf('day');
-  const art = await db.art.where('userId', '==', uid).where('date', '<=', todayEnd).where('date', '>=', today).get();
-  return art.size > 0;
+  // const today = moment().startOf('day');
+  // const todayEnd = today.clone().endOf('day');
+  // const art = await db.art.where('userId', '==', uid).where('date', '<=', todayEnd).where('date', '>=', today).get();
+  // return art.size > 0;
+  return false;
 };
 
 /**
@@ -98,12 +98,12 @@ enum Tier {
 const artStyleCutProb = 0.2;
 
 function chooseGoodWordOrOther(other: string[]) {
-  return Math.random() > 0.2
-    ? goodWords[Math.floor(Math.random() * goodWords.length)] + ' '
-    : other[Math.floor(Math.random() * other.length)] + ' ';
+  return Math.random() > 0.2 ?
+    goodWords[Math.floor(Math.random() * goodWords.length)] + ' ' :
+    other[Math.floor(Math.random() * other.length)] + ' ';
 }
 
-function getAIString() {
+export const getInputStringForAI = function getAIString() {
   const randomNum = Math.random();
 
   let tier = Tier.ONE;
@@ -141,4 +141,4 @@ function getAIString() {
   }
 
   return randomStr;
-}
+};

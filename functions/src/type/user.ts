@@ -1,3 +1,5 @@
+import {Art} from "./art";
+
 /**
  * Contains all fields for a User.
  */
@@ -10,6 +12,7 @@ export type User = {
   telegramHandle: string
   profilePhoto: string;
   thumbnailPhoto: string;
+  art?: Art[];
 }
 
 export enum Faculty {
