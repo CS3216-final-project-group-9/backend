@@ -6,4 +6,5 @@ export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDa
   const todayEnd = today.clone().endOf('day');
   const art = await db.art.where('userId', '==', uid).where('date', '<=', todayEnd).where('date', '>=', today).get();
   return art.size > 0;
-}
+};
+
