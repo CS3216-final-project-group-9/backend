@@ -62,7 +62,7 @@ async function textToImage(prompt: string, userId: string, trigger: AIImageTrigg
             prompt,
             width: 512,
             height: 256,
-            num_inference_steps: 301,
+            num_inference_steps: 100,
           },
           version: MODEL_VERSION,
           webhook_completed: webhook,
