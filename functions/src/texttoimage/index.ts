@@ -3,7 +3,7 @@ import axiosObj = require("axios");
 import {AIImageTrigger} from "../type/ImageTrigger";
 import {FirestoreCustomArt} from "../type/firebase-type";
 import {db} from "../firebase";
-import {hasReceivedImageInPastDay} from "../utils/aiImage";
+import {getInputStringForAi, hasReceivedImageInPastDay} from "./util";
 
 const url = "https://api.replicate.com/v1/predictions";
 const webhook = "https://asia-southeast2-cs3216-final-group-9.cloudfunctions.net/storeImage/image";
@@ -34,7 +34,7 @@ export const generateImage = async function generateImage(userId: string, trigge
     console.log(34);
     return Promise.resolve();
   }
-  const prompt = 'Beautiful digital painting of Singapore'; // TODO: REPLACE WITH ALGORITHM TO GENERATE PROMPT
+  const prompt = getInputStringForAi();
   return textToImage(prompt, userId, trigger, source, milestone);
 };
 

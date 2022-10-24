@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import express = require('express');
 import cors = require('cors');
 import {db} from "../firebase";
-import {downloadImage, uploadImageToDb, uploadLocalFileToStorage} from "../utils/aiImage";
+import {downloadImage, uploadImageToDb, uploadLocalFileToStorage} from "./util";
 
 const app = express();
 // Automatically allow cross-origin requests
