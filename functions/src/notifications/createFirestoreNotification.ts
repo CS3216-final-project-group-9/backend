@@ -6,7 +6,6 @@ import {Post} from "../type/post";
 
 
 export async function addAppliedToPostNotification(postId:string, posterId: string, applicantId:string, title: string) {
-  console.log("callling addappliedtopostnotification", postId, posterId, applicantId, title);
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
@@ -94,9 +93,7 @@ export async function getTokensAndSendMessage( uid: string, title: string) {
   const userDoc = await db.users.doc(uid).get();
   const user = userDoc.data();
   const rawTokens = user?.tokens;
-  console.log(rawTokens);
   if (!rawTokens) {
-    console.log("Cannot send notification to user as cannot find user");
     return;
   }
   const tokens = rawTokens as string[];

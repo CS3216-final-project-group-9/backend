@@ -14,8 +14,10 @@ type Message = {
 export type FirestoreCustomArt = {
   prompt: string;
   date: Date;
+  userId: string;
   source: string;
   trigger: AIImageTrigger;
+  milestone?: number;
   image?: string;
 }
 

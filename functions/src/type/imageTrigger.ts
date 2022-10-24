@@ -3,5 +3,4 @@ export enum AIImageTrigger {
     CREATED_POST,
     APPLIED_POST,
     ACCEPTED_POST,
-    MILESTONE,
 }

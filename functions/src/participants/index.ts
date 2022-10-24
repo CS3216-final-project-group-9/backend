@@ -9,6 +9,8 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
+import {generateImage} from "../texttoimage";
+import {AIImageTrigger} from "../type/ImageTrigger";
 
 export const createPostApplication = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -61,6 +63,7 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
       updateCampaignForApplying(uid, applicationId),
       getTokensAndSendMessage(post.poster.id, message),
       addAppliedToPostNotification(postId, post.poster.id, uid, message),
+      generateImage(uid, AIImageTrigger.APPLIED_POST, applicationId),
     ];
     await Promise.all(promises);
     return {success: true, message: "Applied to post successfully"};
@@ -181,7 +184,9 @@ export const responsePostApplication = functions.region("asia-southeast2").https
         notifyParticipantHostAccepted(post, participant),
         updateCampaignForAcceptedApplication(applicantId, uid, applicationId, postId, postData, applicationData),
         getTokensAndSendMessage(applicantId, applicantMessage),
-        addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage)];
+        addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage),
+        generateImage(uid, AIImageTrigger.ACCEPTED_POST, applicationId),
+      ];
       await Promise.all(promises);
     } else if (responseStatus == AppliedRequestStatus.REJECTED) {
       await notifyParticipantHostCancelled(post, participant);

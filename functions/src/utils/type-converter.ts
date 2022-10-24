@@ -1,8 +1,42 @@
-import {FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
+import {FirestoreCustomArt, FirestoreCustomCampaign, FirestoreCustomCampaignDetails, FirestoreCustomPost, FirestoreCustomUser} from "../type/firebase-type";
 import {User} from "../type/user";
 import {Post} from "../type/post";
 import moment = require("moment");
 import {Campaign} from "../type/campaign";
+import {AIImageTrigger} from "../type/ImageTrigger";
+import {Art} from "../type/art";
+
+export function parseFirestoreArtToArt(art: FirestoreCustomArt, id :string) {
+  if (!art.image) {
+    return;
+  }
+  let description;
+  const artDate = (art.date as any).toDate();
+  const formattedDate = moment(artDate).utcOffset(8, true).format('DD MMM YYYY');
+  switch (art.trigger) {
+    case AIImageTrigger.SIGNED_UP:
+      description = `Received on ${formattedDate} by signing up`;
+      break;
+    case AIImageTrigger.ACCEPTED_POST:
+      description = `Received on ${formattedDate} by accepting an applicant`;
+      break;
+    case AIImageTrigger.APPLIED_POST:
+      description = `Received on ${formattedDate} by applying for a study session`;
+      break;
+    case AIImageTrigger.CREATED_POST:
+      description = `Received on ${formattedDate} by creating a study session`;
+      break;
+  }
+  const returnValue: Art = {
+    id,
+    prompt: art.prompt,
+    date: artDate.toISOString(),
+    userId: art.userId,
+    description,
+    image: art.image,
+  };
+  return returnValue;
+}
 
 export function parseUserToFirestore(user: User) {
   const parsedUser: FirestoreCustomUser = {

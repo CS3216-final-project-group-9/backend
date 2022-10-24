@@ -9,6 +9,8 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {FirestoreCustomCampaign} from "../type/firebase-type";
 import {createCampaign} from "../campaigns";
+import {generateImage} from "../texttoimage";
+import {AIImageTrigger} from "../type/ImageTrigger";
 
 
 export const createUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
@@ -44,7 +46,8 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
     newUser.profilePhoto = photos[1];
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
-    await createNewCampaign(uid);
+    const promises = [createNewCampaign(uid), generateImage(uid, AIImageTrigger.SIGNED_UP, uid)];
+    await Promise.all(promises);
     return {success: true, message: String("New user created successfully")};
   } catch (e) {
     console.error(e);

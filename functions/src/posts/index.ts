@@ -19,6 +19,8 @@ import * as CustomErrorCode from "../utils/errorCode";
 import {getAppliedPostsFromFirestore, getCreatedPostsFromFirestore} from "./getCustomPost";
 import {updateCampaignForDeletedApplication, updateCampaignForSession, updateCampaignForSessionDeleted} from "../campaigns";
 import {addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
+import {generateImage} from "../texttoimage";
+import {AIImageTrigger} from "../type/ImageTrigger";
 
 
 const POST_PER_PAGE = 20;
@@ -82,7 +84,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
-    const promises = [updateCampaignForSession(user.id, parsedPost.id), notifyPosterPostCreated(newPost)];
+    const promises = [updateCampaignForSession(user.id, parsedPost.id), notifyPosterPostCreated(newPost), generateImage(user.id, AIImageTrigger.CREATED_POST, ref.id)];
     await Promise.all(promises);
     return {success: true, message: "Post created successfully"};
   } catch (e) {
