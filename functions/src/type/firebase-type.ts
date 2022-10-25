@@ -49,6 +49,8 @@ export type FirestoreCustomApplicant = {
     status: AppliedRequestStatus;
     updatedTime: Date;
     campaignChances?: CampaignChance;
+    dateAccepted?: Date;
+    dateApplied?: Date;
 }
 
 export type FirestoreCustomPost = {

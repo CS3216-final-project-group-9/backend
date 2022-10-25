@@ -49,6 +49,7 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
       status: AppliedRequestStatus.PENDING,
       postId: postId,
       updatedTime: new Date(),
+      dateApplied: new Date()
     };
     // Add post application
     const applicationId = db.applicants.doc().id;
@@ -166,9 +167,13 @@ export const responsePostApplication = functions.region("asia-southeast2").https
     }
     await applicationDoc.ref.update({
       status: responseStatus,
+      updatedTime: new Date(),
     });
 
     if (responseStatus == AppliedRequestStatus.ACCEPTED) {
+      await applicationDoc.ref.update({
+        dateAccepted: new Date(),
+      });
       const applicantMessage = "You have been accepted to study session";
       const postDoc = await db.posts.doc(postId).get();
       const postData = postDoc.data();
