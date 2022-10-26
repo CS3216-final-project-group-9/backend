@@ -17,8 +17,11 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
 
       const uidPeopleMeet = new Set<string>();
 
+      var studyHours = 0;
+
       await Promise.all(createdSessionDoc.docs.map(async (sessionDoc) => {
         const session = sessionDoc.data();
+        studyHours += getDiffTime(session.endDateTime,session.startDateTime)
         const applicants = await db.applicants.where("postId", "==", session.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
 
         applicants.docs.map((metParticipant) => {
@@ -32,6 +35,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
           const postDoc = await db.posts.doc(session.postId).get();
           const post = postDoc.data();
           if(post) {
+            studyHours += getDiffTime(post.endDateTime,post.startDateTime)
             uidPeopleMeet.add(post.posterId);
 
             const applicants = await db.applicants.where("postId", "==", session.postId)
@@ -45,13 +49,11 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
         
       }));
 
-      
-
       const history: UserHistory = {
           totalCreatedStudySessions: createdSessionDoc.size,
           totalAppliedStudySessons: appliedSessionDoc.size,
           numPeopleMet: uidPeopleMeet.size,
-          totalStudyHours: 0,
+          totalStudyHours: studyHours,
           recentBuddies: [],
           recentStudySessions: []
       }
@@ -64,3 +66,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       return {success: false, message: e};
     }
   });
+
+function getDiffTime(endTime: Date, startTime: Date) {
+  return Math.abs(endTime.getTime() - startTime.getTime()) / 3600000;
+}

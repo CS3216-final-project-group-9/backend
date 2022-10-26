@@ -12,7 +12,7 @@ import {
   parseUserFromFirestore,
 } from "../utils/type-converter";
 import {
-  getPostsFromSnapshot,
+  getExplorePostsFromSnapshot,
   getPostFromFirestorePost,
 } from "./firestorePost";
 import * as CustomErrorCode from "../utils/errorCode";
@@ -162,7 +162,7 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
   try {
     const {page: pageRaw, filter: filterRaw} = data;
     const page = pageRaw ? pageRaw as number: null;
-    const filter = filterRaw? filterRaw as PostsFilter: null;
+    const filter = filterRaw as PostsFilter;
 
     if (!page) {
       throw new functions.https
@@ -182,8 +182,7 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
       postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime").get();
     }
 
-
-    const posts = await (await getPostsFromSnapshot(postSnapshot, uid?? "")).filter((post) => post.poster.id !== uid);
+    const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "",filter)).filter((post) => post.poster.id !== uid);
     return {success: true, message: posts};
   } catch (e) {
     console.error(e);
