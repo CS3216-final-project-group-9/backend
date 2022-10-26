@@ -3,7 +3,7 @@ import {HttpsError} from "firebase-functions/v1/https";
 import moment = require("moment-timezone");
 import {db, unTypedFirestore} from "../firebase";
 import {FirestoreCustomPost} from "../type/firebase-type";
-import {Post, PostLocation} from "../type/post";
+import {Post, PostLocation, PostsFilter} from "../type/post";
 import {AppliedRequestStatus} from "../type/postApplication";
 import {User} from "../type/user";
 import {notifyParticipantsHostCancelled, notifyPosterPostCreated} from "../utils/email";
@@ -160,15 +160,15 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
 
 export const getExplorePost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
-    const {page: pageRaw, location: locationRaw} = data;
+    const {page: pageRaw, filter: filterRaw} = data;
     const page = pageRaw ? pageRaw as number: null;
-    const location = locationRaw? locationRaw as PostLocation[]: null;
+    const filter = filterRaw? filterRaw as PostsFilter: null;
 
     if (!page) {
       throw new functions.https
           .HttpsError("invalid-argument", CustomErrorCode.PAGE_INPUT_NOT_FOUND);
     }
-    if (!location) {
+    if (!filter) {
       throw new functions.https
           .HttpsError("invalid-argument", CustomErrorCode.LOCATION_INPUT_NOT_FOUND);
     }
@@ -176,22 +176,12 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     const uid = context.auth?.uid;
     let postSnapshot: FirebaseFirestore.QuerySnapshot<FirestoreCustomPost>;
     const date = new Date();
-    // if (uid) {
-    if (location.length == 0) {
-      postSnapshot = await db.posts.where("endDateTime", ">=", date).orderBy("endDateTime")
-          .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+    if (filter.locations.length == 0) {
+      postSnapshot = await db.posts.where("endDateTime", ">=", date).orderBy("endDateTime").get();
     } else {
-      postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime")
-          .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
+      postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime").get();
     }
-    // } else {
-    //   if (location.length == 0) {
-    //     postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-    //   } else {
-    //     postSnapshot = await db.posts.orderBy("endDateTime").where("endDateTime", ">=", date).where("location", "in", location)
-    //         .startAfter(POST_PER_PAGE * (page -1)).limit(POST_PER_PAGE).get();
-    //   }
-    // }
+
 
     const posts = await (await getPostsFromSnapshot(postSnapshot, uid?? "")).filter((post) => post.poster.id !== uid);
     return {success: true, message: posts};

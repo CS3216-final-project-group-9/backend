@@ -16,6 +16,30 @@ export type Post = {
 }
 
 
+export enum DayOfTheWeek {
+  MONDAY,
+  TUESDAY,
+  WEDNESDAY,
+  THURSDAY,
+  FRIDAY,
+  SATURDAY,
+  SUNDAY
+}
+
+export enum TimeOfDay {
+  MORNING,
+  AFTERNOON,
+  EVENING,
+  NIGHT
+}
+
+export interface PostsFilter {
+  days: DayOfTheWeek[];
+  timesOfDay: TimeOfDay[];
+  locations: PostLocation[];
+}
+
+
 export enum PostLocation {
   CLB,
   UTOWN,
