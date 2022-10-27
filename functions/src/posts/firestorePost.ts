@@ -6,7 +6,7 @@ import {AppliedRequestStatus} from "../type/postApplication";
 import {Post, PostsFilter} from "../type/post";
 import {User} from "../type/user";
 import * as CustomErrorCode from "../utils/errorCode";
-import { isInsideDateTimeRange } from "./filterPost";
+import {isInsideDateTimeRange} from "./filterPost";
 import {getUserArt} from "../art";
 
 export async function getAllPostsFromFirestorePosts(firestorePosts:FirestoreCustomPost[]) {
@@ -32,7 +32,7 @@ export async function getExplorePostsFromSnapshot(postSnapshot:FirebaseFirestore
   const posts : Post[] = [];
   await Promise.all(postSnapshot.docs.map( async (doc) => {
     const firestorePost = doc.data();
-    if(!isInsideDateTimeRange(filter.timesOfDay,filter.days,firestorePost.startDateTime,firestorePost.endDateTime)) return null;
+    if (!isInsideDateTimeRange(filter.timesOfDay, filter.days, firestorePost.startDateTime, firestorePost.endDateTime)) return null;
     const postObj = await getPostWithAllApplicants(firestorePost);
     const applicants = postObj.applicants.map((user) => user.id);
     const participants = postObj.postObject.participants.map((user) => user.id);

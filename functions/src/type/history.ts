@@ -1,5 +1,5 @@
-import { Post } from "./post";
-import { User } from "./user";
+import {Post} from "./post";
+import {User} from "./user";
 
 export interface UserHistory {
     totalCreatedStudySessions: number;
@@ -9,4 +9,3 @@ export interface UserHistory {
     recentBuddies: User[];
     recentStudySessions: Post[];
   }
-  

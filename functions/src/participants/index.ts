@@ -54,7 +54,7 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
       status: AppliedRequestStatus.PENDING,
       postId: postId,
       updatedTime: new Date(),
-      dateApplied: new Date()
+      dateApplied: new Date(),
     };
     // Add post application
     const applicationId = db.applicants.doc().id;

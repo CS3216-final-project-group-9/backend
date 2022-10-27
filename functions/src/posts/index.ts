@@ -24,7 +24,7 @@ import {AIImageTrigger} from "../type/ImageTrigger";
 import {getUserArt} from "../art";
 
 
-const POST_PER_PAGE = 20;
+// const POST_PER_PAGE = 20;
 
 export const createPost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -188,7 +188,7 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
       postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime").get();
     }
 
-    const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "",filter)).filter((post) => post.poster.id !== uid);
+    const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "", filter)).filter((post) => post.poster.id !== uid);
     return {success: true, message: posts};
   } catch (e) {
     console.error(e);
