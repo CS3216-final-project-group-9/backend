@@ -3,6 +3,7 @@ import * as participants from "./participants";
 import * as posts from "./posts";
 import * as notification from "./notifications";
 import * as campaigns from "./campaigns";
+import * as webhook from "./texttoimage/webhook";
 import * as history from "./history"
 
 // Users
@@ -35,6 +36,8 @@ export const deletePostApplication = participants.deletePostApplication;
 
 // Campaigns
 export const getUserCampaigns = campaigns.getUserCampaigns;
+// Image webhook
+export const storeImage = webhook.storeImage;
 
 
 // History

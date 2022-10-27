@@ -3,11 +3,22 @@ import {Post, PostLocation} from "./post";
 import {AppliedRequestStatus} from "./postApplication";
 import {NotificationType} from "./notification";
 import {CampaignChance} from "./campaign";
+import {AIImageTrigger} from "./ImageTrigger";
 
 type Message = {
     subject: string;
     text: string;
     html: string;
+}
+
+export type FirestoreCustomArt = {
+  prompt: string;
+  date: Date;
+  userId: string;
+  source: string;
+  trigger: AIImageTrigger;
+  milestone?: number;
+  image?: string;
 }
 
 export type FirestoreCustomCampaignDetails = {

@@ -90,7 +90,7 @@ export function notifyParticipantHostCancelled(post: Post, participant: User) {
   const postDate = momentTimezone(post.startDateTime).format("MMM D");
   const postLocation = post.location;
   const subject = "Study session cancelled!";
-  const title = "Your study session cancelled!";
+  const title = "Your study session is cancelled!";
   const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
   return sendEmailToUser(participant, subject, title, message);
 }
@@ -108,7 +108,7 @@ export function notifyParticipantsHostCancelled(post: Post, applicants: User[]) 
   }
   for (const user of applicants) {
     const subject = "Study session cancelled!";
-    const title = "Your study session cancelled!";
+    const title = "Your study session is cancelled!";
     const message = `The study session you have applied for on ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
     promises.push(sendEmailToUser(user, subject, title, message));
   }

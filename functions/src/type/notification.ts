@@ -2,6 +2,7 @@ import {Post} from "./post";
 import {AppliedRequest, CreatedRequest} from "./postApplication";
 import {User} from "./user";
 
+
 export enum NotificationType {
     APPLIED_TO_YOUR_POST,
     CANCELLED_THEIR_APPLICATION,

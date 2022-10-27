@@ -1,3 +1,4 @@
+import {getUserArt} from "../art";
 import {db} from "../firebase";
 import {createAppliedRequest, createCreatedRequest} from "../posts/getCustomPost";
 import {FirestoreCustomAppliedRequest, FirestoreCustomCreatedRequest, FirestoreCustomNotification, FirestoreCustomOldPost} from "../type/firebase-type";
@@ -84,6 +85,7 @@ async function parseGenericNotification(firestoreNotification:FirestoreCustomNot
 async function parseDeletePostApplicationNotification(firestoreNotification:FirestoreCustomNotification) {
   if (!firestoreNotification.otherUserId) return null;
   const userDoc = await db.users.doc(firestoreNotification.otherUserId).get();
+  const art = await getUserArt(firestoreNotification.otherUserId);
   const firestoreUser = userDoc.data();
   if (!firestoreUser) return null;
   if (!firestoreNotification.data) return null;
@@ -91,7 +93,7 @@ async function parseDeletePostApplicationNotification(firestoreNotification:Fire
   const postObj = firestoreNotification.data as FirestoreCustomOldPost;
   if (!postObj) return null;
 
-  const user = parseUserFromFirestore(firestoreUser);
+  const user = parseUserFromFirestore(firestoreUser, art);
   const notification: Notification = {
     id: firestoreNotification.id,
     type: firestoreNotification.type,

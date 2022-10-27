@@ -7,6 +7,7 @@ import {Post, PostsFilter} from "../type/post";
 import {User} from "../type/user";
 import * as CustomErrorCode from "../utils/errorCode";
 import { isInsideDateTimeRange } from "./filterPost";
+import {getUserArt} from "../art";
 
 export async function getAllPostsFromFirestorePosts(firestorePosts:FirestoreCustomPost[]) {
   const posts: Post[] = [];
@@ -64,15 +65,17 @@ export async function getPostWithAllApplicants(firestorePost: FirestoreCustomPos
   const applicants: User[] = [];
   await Promise.all(firestoreParticipantsDoc.docs.map(async (participantDoc) => {
     const participant = participantDoc.data();
-    const user = await db.users.doc(participant.userId).get();
+    const promises = await Promise.all([db.users.doc(participant.userId).get(), getUserArt(participant.userId)]);
+    const user = promises[0];
+    const art = promises[1];
     const docData = user.data();
     if (docData && participant.status === AppliedRequestStatus.ACCEPTED) {
       participants.push(docData);
     } else if (docData) {
-      applicants.push(parseUserFromFirestore(docData));
+      applicants.push(parseUserFromFirestore(docData, art));
     }
   }));
-  const postObject = parsePostFromFirestore(firestorePost, poster, participants);
+  const postObject = await parsePostFromFirestore(firestorePost, poster, participants);
   return {postObject, applicants};
 }
 
@@ -94,5 +97,6 @@ export async function getPostFromFirestorePost(firestorePost: FirestoreCustomPos
     const docData = user.data();
     if (docData) participants.push(docData);
   }));
-  return parsePostFromFirestore(firestorePost, poster, participants);
+  const post = await parsePostFromFirestore(firestorePost, poster, participants);
+  return post;
 }

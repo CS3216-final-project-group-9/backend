@@ -1,5 +1,6 @@
 import * as admin from "firebase-admin";
 import {FirestoreCustomApplicant,
+  FirestoreCustomArt,
   FirestoreCustomCampaign,
   FirestoreCustomCampaignDetails,
   FirestoreCustomNotification,
@@ -13,6 +14,7 @@ admin.initializeApp();
 export const unTypedFirestore = admin.firestore();
 
 export const cloudMessageAdmin = admin.messaging();
+export const storage = admin.storage().bucket();
 // Type converter for Typescript
 // Reference : https://gist.github.com/JamieCurnow/cba3968a7f1e335d473632f9fc9f6e8b
 
@@ -34,6 +36,7 @@ const db = {
   applicants: dataPoint<FirestoreCustomApplicant>("applicants"),
   mail: dataPoint<FirestoreMail>("mail"),
   notifications: dataPoint<FirestoreCustomNotification>("notifications"),
+  art: dataPoint<FirestoreCustomArt>("art"),
 };
 
 export {admin, db};

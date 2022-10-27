@@ -1,4 +1,5 @@
 import moment = require("moment");
+import {getUserArt} from "../art";
 import {db} from "../firebase";
 import {FirestoreCustomApplicant, FirestoreCustomPost} from "../type/firebase-type";
 import {AppliedRequest, AppliedRequestStatus, CreatedRequest} from "../type/postApplication";
@@ -36,8 +37,9 @@ export async function createCreatedRequest(firestorePost:FirestoreCustomPost) {
   await Promise.all(participantsDoc.docs.map(async (participantDoc) => {
     const applicant = participantDoc.data();
     const applicantDoc = await db.users.doc(applicant.userId).get();
+    const art = await getUserArt(applicant.userId);
     const app = applicantDoc.data();
-    if (app) applicants.push(parseUserFromFirestore(app));
+    if (app) applicants.push(parseUserFromFirestore(app, art));
   }));
 
   const request: CreatedRequest = {

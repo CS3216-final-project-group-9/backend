@@ -11,7 +11,6 @@ import {parseCampaignFromFirestore} from "../utils/type-converter";
 import {Campaign, CampaignChance} from "../type/campaign";
 
 async function checkHasExceededLimitForStudySessions(userId: string, date: Date) {
-  console.log(14, userId, date);
   const recordedPosts = await db.posts.where("posterId", "==", userId).where("hasBeenUsedForCampaign", ">=", CampaignChance.RECORDED_CREATE).get();
   const filteredRecordedPostsWithoutAccept = recordedPosts.docs.filter((doc) => {
     const data = doc.data();
@@ -22,21 +21,17 @@ async function checkHasExceededLimitForStudySessions(userId: string, date: Date)
     const data = doc.data();
     return data.campaignChances !== CampaignChance.RECORDED_ACCEPT;
   });
-  console.log(filteredRecordedPostsWithoutAccept.length, recordedApplicants.size);
   const totalLen = filteredRecordedPostsWithoutAccept.length + filteredRecordedApplicants.length;
   if (totalLen > 1) {
-    console.log(18);
     return true;
   }
   const filteredPosts = filteredRecordedPostsWithoutAccept.filter((doc) => {
     const data = doc.data();
     const start = (data.startDateTime as any).toDate();
-    console.log(start);
     const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
   if (filteredPosts.length > 0) {
-    console.log(28);
     return true;
   }
   const appliedRequests = await getAppliedPostsFromFirestore(recordedApplicants);
@@ -45,7 +40,6 @@ async function checkHasExceededLimitForStudySessions(userId: string, date: Date)
     const isSame = moment(start).isSame(date, "day");
     return isSame;
   });
-  console.log(37, filteredApplicants.length);
   return filteredApplicants.length > 0;
 }
 
@@ -61,18 +55,14 @@ export const updateCampaignForSession = async function(userId: string, postId: s
   const postDoc = await postRef.get();
   const postData = postDoc.data();
   if (!postData) {
-    console.log(50, userId, postId);
     return;
   }
   if (postData.hasBeenUsedForCampaign) {
-    console.log(54, userId, postId);
     return;
   }
   const start = (postData.startDateTime as any).toDate();
-  console.log(63, start);
   const hasExceededLimit = await checkHasExceededLimitForStudySessions(userId, start);
   if (hasExceededLimit) {
-    console.log(59, userId, postId);
     return;
   }
   batch.update(campaignRef, {chances: FieldValue.increment(1)});
