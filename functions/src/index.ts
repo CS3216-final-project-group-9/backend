@@ -5,6 +5,7 @@ import * as notification from "./notifications";
 import * as campaigns from "./campaigns";
 import * as webhook from "./texttoimage/webhook";
 import * as history from "./history";
+import * as art from "./art";
 
 // Users
 export const createUser = users.createUser;
@@ -42,3 +43,9 @@ export const storeImage = webhook.storeImage;
 
 // History
 export const getHistory = history.getHistory;
+
+
+// Art
+export const changeArtVisibility = art.changeArtVisibility;
+export const deleteArt = art.deleteArt;
+export const setCover = art.setCover;

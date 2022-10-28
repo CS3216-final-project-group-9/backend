@@ -35,6 +35,7 @@ export function parseFirestoreArtToArt(art: FirestoreCustomArt, id :string) {
     userId: art.userId,
     description,
     image: art.image,
+    isPublic: art.isPublic,
   };
   return returnValue;
 }

@@ -19,6 +19,7 @@ export type FirestoreCustomArt = {
   trigger: AIImageTrigger;
   milestone?: number;
   image?: string;
+  isPublic: boolean;
 }
 
 export type FirestoreCustomCampaignDetails = {

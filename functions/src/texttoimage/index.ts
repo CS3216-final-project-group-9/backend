@@ -48,6 +48,7 @@ async function textToImage(prompt: string, userId: string, trigger: AIImageTrigg
     trigger,
     source,
     date: new Date(),
+    isPublic: true,
   };
   if (milestone !== undefined) {
     artObject.milestone = milestone;

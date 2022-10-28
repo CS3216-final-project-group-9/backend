@@ -13,6 +13,8 @@ export const APPLICANT_ID_INPUT_NOT_FOUND = "Applicant ID could not be found in 
 export const NOTIFICATION_ID_INPUT_NOT_FOUND = "Notification ID could not be found in input";
 export const TOKEN_INPUT_NOT_FOUND = "Token could not be found in input";
 export const FILTER_INPUT_NOT_FOUND = "Filter options could not be found in input";
+export const ART_ID_INPUT_NOT_FOUND = "Art ID could not be found in input";
+export const ART_VISIBLE_INPUT_NOT_FOUND = "Art Visibility Status could not be found in input";
 
 // DB Error
 export const USER_NOT_IN_DB = "Could not find user in DB";
@@ -21,6 +23,9 @@ export const POST_NOT_IN_DB = "Could not find post in DB";
 export const CURRENT_USER_PROFILE_NOT_IN_DB = "Current user profile not found in DB";
 export const POST_AUTHOR_NOT_IN_DB = "Could not fetch post author in DB";
 export const APPLICANT_NOT_IN_DB = "Could not find post application in DB";
+export const ART_NOT_IN_DB = "Could not find art in DB";
+export const ART_IMAGE_NOT_IN_DB = "Could not find art image link in DB";
+
 
 // Check condition
 export const DATE_MORE_THAN_14_FROM_NOW = "Date is more than 14 days away from now";
@@ -35,4 +40,7 @@ export const DUPLICATE_APPLICATION_CREATION = "User already applied for this pos
 export const DUPLICATE_TELE = "Telegram handle has been used";
 export const DUPLICATE_USERNAME = "Username has been used";
 export const DUPLICATE_TELE_AND_USERNAME = "Telegram handle and username have been used";
+
+export const USER_NOT_ART_OWNER = "User is not art owner";
+
 
