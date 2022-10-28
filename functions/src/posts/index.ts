@@ -24,7 +24,7 @@ import {AIImageTrigger} from "../type/ImageTrigger";
 import {getUserArt} from "../art";
 
 
-// const POST_PER_PAGE = 20;
+const POST_PER_PAGE = 20;
 
 export const createPost = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -176,7 +176,7 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     }
     if (!filter) {
       throw new functions.https
-          .HttpsError("invalid-argument", CustomErrorCode.LOCATION_INPUT_NOT_FOUND);
+          .HttpsError("invalid-argument", CustomErrorCode.FILTER_INPUT_NOT_FOUND);
     }
 
     const uid = context.auth?.uid;
@@ -189,7 +189,9 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     }
 
     const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "", filter)).filter((post) => post.poster.id !== uid);
-    return {success: true, message: posts};
+
+    const pagedPosts = paginate(posts, POST_PER_PAGE, page);
+    return {success: true, message: pagedPosts};
   } catch (e) {
     console.error(e);
     if (e instanceof HttpsError) return {success: false, message: e.message};
@@ -271,3 +273,9 @@ export const getCreatedPosts = functions.region("asia-southeast2").https.onCall(
     return {success: false, message: e};
   }
 });
+
+
+function paginate(array: Array<Post>, pageSize:number, pageNumber:number) {
+  // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
+  return array.slice((pageNumber - 1) * pageSize, pageNumber * pageSize);
+}
