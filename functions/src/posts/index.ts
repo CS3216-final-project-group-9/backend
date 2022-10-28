@@ -185,7 +185,8 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
     if (filter.locations.length == 0) {
       postSnapshot = await db.posts.where("endDateTime", ">=", date).orderBy("endDateTime").get();
     } else {
-      postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", location).orderBy("endDateTime").get();
+      postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", filter.locations)
+          .orderBy("endDateTime").get();
     }
 
     const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "", filter)).filter((post) => post.poster.id !== uid);

@@ -1,11 +1,16 @@
 import {DayOfTheWeek, TimeOfDay} from "../type/post";
+import moment = require("moment-timezone");
 
+export function isInsideDateRange(days: DayOfTheWeek[], startDateTime: Date, endDateTime: Date) {
+  const endDay = ( moment(endDateTime).days() - 1)%7 as DayOfTheWeek;
+  const startDay = ( moment(endDateTime).days() - 1)%7 as DayOfTheWeek;
 
-export function isInsideDateTimeRange(timePeriods: TimeOfDay[], days: DayOfTheWeek[], startDateTime: Date, endDateTime: Date) {
-  const endDay = endDateTime.getDay();
-  const startDay = startDateTime.getDay();
-  if (!(days.includes(endDay) || days.includes(startDay))) return false;
-  const startTime = startDateTime.getHours();
+  if (!days.includes(endDay) && !days.includes(startDay)) return false;
+  return true;
+}
+
+export function isInsideTimeRange(timePeriods: TimeOfDay[], startDateTime: Date, endDateTime: Date) {
+  const startTime = moment(startDateTime).hour();
 
   if (between(startTime, 6, 12) && !timePeriods.includes(TimeOfDay.MORNING) ) return false;
   if (between(startTime, 13, 18) && !timePeriods.includes(TimeOfDay.AFTERNOON) ) return false;
