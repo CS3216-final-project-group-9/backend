@@ -4,6 +4,10 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {UserHistory} from "../type/history";
 import {AppliedRequestStatus} from "../type/postApplication";
+import { FirestoreCustomPost } from "../type/firebase-type";
+import moment = require("moment");
+import { Post } from "../type/post";
+import { getAllPostsFromFirestorePosts } from "../posts/firestorePost";
 
 export const getHistory = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -14,6 +18,8 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
 
     const createdSessionDoc = await db.posts.where("posterId", '==', uid).get();
     const appliedSessionDoc = await db.applicants.where("userId", "==", uid).get();
+    const firestorePosts: FirestoreCustomPost[] = [];
+
 
     const uidPeopleMeet = new Set<string>();
 
@@ -21,6 +27,8 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
 
     await Promise.all(createdSessionDoc.docs.map(async (sessionDoc) => {
       const session = sessionDoc.data();
+      firestorePosts.push(session);
+      
       studyHours += getDiffTime(session.endDateTime, session.startDateTime);
       const applicants = await db.applicants.where("postId", "==", session.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
 
@@ -35,6 +43,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
         const postDoc = await db.posts.doc(session.postId).get();
         const post = postDoc.data();
         if (post) {
+          firestorePosts.push(post);
           studyHours += getDiffTime(post.endDateTime, post.startDateTime);
           uidPeopleMeet.add(post.posterId);
 
@@ -48,13 +57,24 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       }
     }));
 
+    const sortedPost = firestorePosts.sort((a,b) => {
+      const aDateOfStudy = moment(a.startDateTime);
+      const bDateOfStudy = moment(b.startDateTime);
+      return aDateOfStudy.isBefore(bDateOfStudy, "minute") ? -1 : 1;
+    })
+
+    const recentFirestorePosts = sortedPost.slice(0, 5);
+
+    const recentPosts: Post[] = await getAllPostsFromFirestorePosts(recentFirestorePosts);
+
+    
     const history: UserHistory = {
       totalCreatedStudySessions: createdSessionDoc.size,
       totalAppliedStudySessons: appliedSessionDoc.size,
       numPeopleMet: uidPeopleMeet.size,
       totalStudyHours: studyHours,
       recentBuddies: [],
-      recentStudySessions: [],
+      recentStudySessions: recentPosts,
     };
 
 

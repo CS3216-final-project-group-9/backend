@@ -84,7 +84,8 @@ async function textToImage(prompt: string, userId: string, trigger: AIImageTrigg
     console.log(79);
     const ref = db.art.doc(id);
     return ref.set(artObject);
-  } catch {
+  } catch (e) {
+    console.log(e);
     return;
   }
 }
