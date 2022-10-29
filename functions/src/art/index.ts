@@ -76,7 +76,6 @@ export const setCover = functions.region("asia-southeast2").https.onCall(async (
 
     await db.users.doc(uid).update({
       profilePhoto: imgUrl,
-      thumbnailPhoto: imgUrl,
     });
 
     return {success: true, message: "Update profile picture successfully"};
