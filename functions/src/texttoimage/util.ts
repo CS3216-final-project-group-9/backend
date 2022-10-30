@@ -10,6 +10,7 @@ import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
 import moment = require("moment");
+import {addReceiveArtNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
   const today = moment().startOf('day');
@@ -86,6 +87,15 @@ export const uploadImageToDb = async function uploadImageToDb(id: string, url: s
   const ref = db.art.doc(id);
   return ref.update({image: url});
 };
+
+export async function notifyUserImageDone(artId:string) {
+  const artDoc = await db.art.doc(artId).get();
+  const firestoreArt = artDoc.data();
+  const message = "You've got a new art piece! Go check it out!";
+  if (!firestoreArt) return;
+  await addReceiveArtNotification(firestoreArt.userId, message, "");
+  await getTokensAndSendMessage(firestoreArt.userId, message);
+}
 
 const specificObjects = animals.concat(colors).concat(pokemon);
 

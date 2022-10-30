@@ -1,7 +1,7 @@
 import {Gender, Faculty} from "./user";
 import {Post, PostLocation} from "./post";
 import {AppliedRequestStatus} from "./postApplication";
-import {NotificationType} from "./notification";
+import {BuddyNotificationType} from "./notification";
 import {CampaignChance} from "./campaign";
 import {AIImageTrigger} from "./ImageTrigger";
 
@@ -77,7 +77,7 @@ export type FirestoreCustomPost = {
 
 export interface FirestoreCustomNotification {
     id: string;
-    type: NotificationType,
+    type: BuddyNotificationType,
     userId: string,
     hasBeenViewed: boolean,
     otherUserId?: string // the user related to ur notification. eg: user who applied to your post

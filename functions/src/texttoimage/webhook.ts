@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import express = require('express');
 import cors = require('cors');
 import {db} from "../firebase";
-import {downloadImage, uploadImageToDb, uploadLocalFileToStorage} from "./util";
+import {downloadImage, notifyUserImageDone, uploadImageToDb, uploadLocalFileToStorage} from "./util";
 
 const app = express();
 // Automatically allow cross-origin requests
@@ -24,6 +24,7 @@ app.post('/image', express.raw({type: 'application/json'}), async (req: any, res
     const image = await downloadImage(imageUrl, id);
     const firebaseUrl = await uploadLocalFileToStorage(image.filePath, image.fileName);
     await uploadImageToDb(id, firebaseUrl);
+    await notifyUserImageDone(id);
     res.sendStatus(200);
   } catch (e) {
     console.error(e);

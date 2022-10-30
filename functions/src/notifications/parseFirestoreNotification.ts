@@ -2,22 +2,24 @@ import {getUserArt} from "../art";
 import {db} from "../firebase";
 import {createAppliedRequest, createCreatedRequest} from "../posts/getCustomPost";
 import {FirestoreCustomAppliedRequest, FirestoreCustomCreatedRequest, FirestoreCustomNotification, FirestoreCustomOldPost} from "../type/firebase-type";
-import {NotificationType, Notification} from "../type/notification";
+import {BuddyNotificationType, Notification} from "../type/notification";
 import {parseUserFromFirestore} from "../utils/type-converter";
 
 
 export async function parseFirestoreNotification(firestoreNotification:FirestoreCustomNotification) {
   switch (firestoreNotification.type) {
-    case NotificationType.ACCEPTED_YOUR_APPLICATION:
+    case BuddyNotificationType.ACCEPTED_YOUR_APPLICATION:
       return await parseAcceptedApplicationNotification(firestoreNotification);
-    case NotificationType.APPLIED_TO_YOUR_POST:
+    case BuddyNotificationType.APPLIED_TO_YOUR_POST:
       return await parseCreateDApplicationNotification(firestoreNotification);
-    case NotificationType.CANCELLED_THEIR_APPLICATION:
+    case BuddyNotificationType.CANCELLED_THEIR_APPLICATION:
       return await parseCreateDApplicationNotification(firestoreNotification);
-    case NotificationType.GENERIC_MESSAGE:
+    case BuddyNotificationType.GENERIC_MESSAGE:
       return await parseGenericNotification(firestoreNotification);
-    case NotificationType.DELETED_POST_YOU_APPLIED_FOR:
+    case BuddyNotificationType.DELETED_POST_YOU_APPLIED_FOR:
       return await parseDeletePostApplicationNotification(firestoreNotification);
+    case BuddyNotificationType.RECEIVED_NEW_ART:
+      return await parseReceiveArtNotification(firestoreNotification);
     default:
       return null;
   }
@@ -38,7 +40,7 @@ async function parseAcceptedApplicationNotification(firestoreNotification:Firest
 
   const notification: Notification = {
     id: firestoreNotification.id,
-    type: NotificationType.ACCEPTED_YOUR_APPLICATION,
+    type: BuddyNotificationType.ACCEPTED_YOUR_APPLICATION,
     hasBeenViewed: firestoreNotification.hasBeenViewed,
     title: firestoreNotification.title ? firestoreNotification.title:undefined,
     data: appliedRequest,
@@ -70,6 +72,19 @@ async function parseCreateDApplicationNotification(firestoreNotification:Firesto
 }
 
 async function parseGenericNotification(firestoreNotification:FirestoreCustomNotification) {
+  if (!firestoreNotification.data) return null;
+  const message = firestoreNotification.data as string;
+  const notification: Notification = {
+    id: firestoreNotification.id,
+    type: firestoreNotification.type,
+    hasBeenViewed: firestoreNotification.hasBeenViewed,
+    title: firestoreNotification.title,
+    data: message,
+  };
+  return notification;
+}
+
+async function parseReceiveArtNotification(firestoreNotification:FirestoreCustomNotification) {
   if (!firestoreNotification.data) return null;
   const message = firestoreNotification.data as string;
   const notification: Notification = {

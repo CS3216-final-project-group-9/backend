@@ -1,7 +1,7 @@
 
 import {cloudMessageAdmin, db} from "../firebase";
 import {FirestoreCustomNotification} from "../type/firebase-type";
-import {NotificationType} from "../type/notification";
+import {BuddyNotificationType} from "../type/notification";
 import {Post} from "../type/post";
 
 
@@ -9,7 +9,7 @@ export async function addAppliedToPostNotification(postId:string, posterId: stri
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
-    type: NotificationType.APPLIED_TO_YOUR_POST,
+    type: BuddyNotificationType.APPLIED_TO_YOUR_POST,
     userId: posterId,
     otherUserId: applicantId,
     data: {
@@ -26,7 +26,7 @@ export async function addCancelPostApplicationNotification(postId:string, poster
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
-    type: NotificationType.CANCELLED_THEIR_APPLICATION,
+    type: BuddyNotificationType.CANCELLED_THEIR_APPLICATION,
     userId: posterId,
     otherUserId: applicantId,
     data: {
@@ -43,7 +43,7 @@ export async function addAcceptPostApplicationNotification(postId:string, poster
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
-    type: NotificationType.ACCEPTED_YOUR_APPLICATION,
+    type: BuddyNotificationType.ACCEPTED_YOUR_APPLICATION,
     userId: applicantId,
     otherUserId: posterId,
     data: {
@@ -62,7 +62,21 @@ export async function addGenericNotification(userId: string, title: string, mess
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
-    type: NotificationType.GENERIC_MESSAGE,
+    type: BuddyNotificationType.GENERIC_MESSAGE,
+    userId: userId,
+    data: message,
+    title: title,
+    hasBeenViewed: false,
+    updatedTime: new Date(),
+  };
+  await ref.set(newNotification);
+}
+
+export async function addReceiveArtNotification(userId: string, title: string, message: string) {
+  const ref = db.notifications.doc();
+  const newNotification: FirestoreCustomNotification = {
+    id: ref.id,
+    type: BuddyNotificationType.RECEIVED_NEW_ART,
     userId: userId,
     data: message,
     title: title,
@@ -76,7 +90,7 @@ export async function addDeletePostApplicationNotification(post:Post, posterId: 
   const ref = db.notifications.doc();
   const newNotification: FirestoreCustomNotification = {
     id: ref.id,
-    type: NotificationType.DELETED_POST_YOU_APPLIED_FOR,
+    type: BuddyNotificationType.DELETED_POST_YOU_APPLIED_FOR,
     userId: applicantId,
     otherUserId: posterId,
     title: title,
