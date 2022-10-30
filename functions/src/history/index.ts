@@ -4,10 +4,13 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {UserHistory} from "../type/history";
 import {AppliedRequestStatus} from "../type/postApplication";
-import { FirestoreCustomPost } from "../type/firebase-type";
+import {FirestoreCustomPost} from "../type/firebase-type";
 import moment = require("moment");
-import { Post } from "../type/post";
-import { getAllPostsFromFirestorePosts } from "../posts/firestorePost";
+import {Post} from "../type/post";
+import {getAllPostsFromFirestorePosts} from "../posts/firestorePost";
+import {User} from "../type/user";
+import {parseUserFromFirestore} from "../utils/type-converter";
+import {getUserArt} from "../art";
 
 export const getHistory = functions.region("asia-southeast2").https.onCall(async (data, context) => {
   try {
@@ -28,7 +31,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
     await Promise.all(createdSessionDoc.docs.map(async (sessionDoc) => {
       const session = sessionDoc.data();
       firestorePosts.push(session);
-      
+
       studyHours += getDiffTime(session.endDateTime, session.startDateTime);
       const applicants = await db.applicants.where("postId", "==", session.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
 
@@ -57,23 +60,64 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       }
     }));
 
-    const sortedPost = firestorePosts.sort((a,b) => {
+    const sortedPost = firestorePosts.sort((a, b) => {
       const aDateOfStudy = moment(a.startDateTime);
       const bDateOfStudy = moment(b.startDateTime);
       return aDateOfStudy.isBefore(bDateOfStudy, "minute") ? -1 : 1;
-    })
+    });
 
     const recentFirestorePosts = sortedPost.slice(0, 5);
 
     const recentPosts: Post[] = await getAllPostsFromFirestorePosts(recentFirestorePosts);
 
-    
+    const uidRecentBuddy = new Set<string>();
+    const uidRecentBuddyList: string[] = [];
+
+    await Promise.all(sortedPost.map(async (post) => {
+      const uidMet:string[] = [];
+      if (post.posterId != uid) uidMet.push(post.posterId);
+      const participantDoc = await db.applicants.where("postId", "==", post.id).where("status", "==", AppliedRequestStatus.ACCEPTED).get();
+
+      participantDoc.docs.map((p) =>{
+        const u = p.data();
+        if (u.userId != uid) uidMet.push(u.userId);
+      });
+      return uidMet;
+    })).then((responses) => {
+      responses.map((response) => {
+        response.map((index) => {
+          if (uidRecentBuddy.size < 5 && !uidRecentBuddy.has(index)) {
+            uidRecentBuddy.add(index);
+            uidRecentBuddyList.push(index);
+          }
+        });
+      });
+    });
+
+
+    const recentBuddies: User[] = [];
+
+    await Promise.all(uidRecentBuddyList.map(async (index) => {
+      const userDoc = await db.users.doc(index).get();
+      const firestoreUser = userDoc.data();
+      const art = await getUserArt(index);
+      if (firestoreUser) {
+        return parseUserFromFirestore(firestoreUser, art);
+      }
+      return null;
+    })).then((responses) => {
+      responses.map((response) => {
+        if (response) recentBuddies.push(response);
+      });
+    });
+
+
     const history: UserHistory = {
       totalCreatedStudySessions: createdSessionDoc.size,
       totalAppliedStudySessons: appliedSessionDoc.size,
       numPeopleMet: uidPeopleMeet.size,
       totalStudyHours: studyHours,
-      recentBuddies: [],
+      recentBuddies: recentBuddies,
       recentStudySessions: recentPosts,
     };
 
