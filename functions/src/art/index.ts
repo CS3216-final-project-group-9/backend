@@ -4,6 +4,7 @@ import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode"; import {parseFirestoreArtToArt} from "../utils/type-converter";
 import moment = require("moment");
 import {Art} from "../type/art";
+import {urlDefaultCover} from "../users/profilePhoto";
 
 
 export const changeArtVisibility = functions.region("asia-southeast2").https.onCall(async (data, context) => {
@@ -100,17 +101,31 @@ export const deleteArt = functions.region("asia-southeast2").https.onCall(async 
     }
 
     const artDoc = await db.art.doc(artId).get();
+    const userDoc = await db.users.doc(uid).get();
 
     const art = artDoc.data();
+    const user = userDoc.data();
 
     if (!art) {
       throw new functions.https.HttpsError("not-found", CustomErrorCode.ART_NOT_IN_DB);
+    }
+    if (!user) {
+      throw new functions.https.HttpsError("not-found", CustomErrorCode.USER_NOT_IN_DB);
     }
     if (art.userId != uid) {
       throw new functions.https.HttpsError("failed-precondition", CustomErrorCode.USER_NOT_ART_OWNER);
     }
 
+    if (user.profilePhoto == art.image) {
+      await db.users.doc(uid).set(
+          {
+            profilePhoto: urlDefaultCover,
+          },
+          {merge: true});
+    }
+
     await db.art.doc(artId).delete();
+
     return {success: true, message: "Delete art successfully"};
   } catch (e) {
     console.error(e);
@@ -121,6 +136,23 @@ export const deleteArt = functions.region("asia-southeast2").https.onCall(async 
 
 
 export const getUserArt = async function getUserArt(uid: string) {
+  const query = await db.art.where('userId', '==', uid).where('isPublic', '==', true).get();
+  const results: Art[] = [];
+  query.docs.forEach((doc) => {
+    const data = doc.data();
+    const obj = parseFirestoreArtToArt(data, doc.id);
+    if (obj) {
+      results.push(obj);
+    }
+  });
+  const sorted = results.sort((a, b) => {
+    const aDate = moment(a.date);
+    return -aDate.diff(b.date, 'minute'); // latest first
+  });
+  return sorted;
+};
+
+export const getCurrentUserArt = async function getUserArt(uid: string) {
   const query = await db.art.where('userId', '==', uid).get();
   const results: Art[] = [];
   query.docs.forEach((doc) => {

@@ -27,7 +27,7 @@ const malePhotos = [
 function getRandom(list: string[][]) {
   return list[Math.floor((Math.random()*list.length))];
 }
-
+export const urlDefaultCover = "https://firebasestorage.googleapis.com/v0/b/cs3216-final-group-9.appspot.com/o/assets%2Fdefault_cover.jpg?alt=media&token=f83c2d95-3159-496f-9caa-7dfbbecf0875";
 export function getPhoto(gender: Gender) {
   if (gender == Gender.MALE) {
     return getRandom(malePhotos);

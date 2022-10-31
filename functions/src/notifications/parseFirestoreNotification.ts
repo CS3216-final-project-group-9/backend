@@ -85,14 +85,12 @@ async function parseGenericNotification(firestoreNotification:FirestoreCustomNot
 }
 
 async function parseReceiveArtNotification(firestoreNotification:FirestoreCustomNotification) {
-  if (!firestoreNotification.data) return null;
-  const message = firestoreNotification.data as string;
   const notification: Notification = {
     id: firestoreNotification.id,
     type: firestoreNotification.type,
     hasBeenViewed: firestoreNotification.hasBeenViewed,
     title: firestoreNotification.title,
-    data: message,
+    data: "",
   };
   return notification;
 }

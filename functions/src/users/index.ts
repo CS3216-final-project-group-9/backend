@@ -3,7 +3,7 @@ import * as functions from "firebase-functions";
 import {User} from "../type/user";
 import {parseUserFromFirestore,
   parseUserToFirestore} from "../utils/type-converter";
-import {getPhoto} from "./profilePhoto";
+import {getPhoto, urlDefaultCover} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
@@ -11,7 +11,7 @@ import {FirestoreCustomCampaign} from "../type/firebase-type";
 import {createCampaign} from "../campaigns";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
-import {getUserArt} from "../art";
+import {getCurrentUserArt, getUserArt} from "../art";
 
 
 export const createUser = functions.region("asia-southeast2").https.onCall(async (data, context) => {
@@ -43,8 +43,10 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
 
     newUser.id = uid;
     const photos = getPhoto(newUser.gender);
+
+
     newUser.thumbnailPhoto = photos[0];
-    newUser.profilePhoto = photos[1];
+    newUser.profilePhoto = urlDefaultCover;
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
     const promises = [createNewCampaign(uid), generateImage(uid, AIImageTrigger.SIGNED_UP, uid)];
@@ -151,7 +153,7 @@ export const getCurrentUser = functions.region("asia-southeast2").https.onCall(a
     }
 
     const userDoc = await db.users.doc(uid).get();
-    const art = await getUserArt(uid);
+    const art = await getCurrentUserArt(uid);
     const user = userDoc.data();
     if (!user) {
       throw new functions.https

@@ -14,7 +14,7 @@ export const getNotifications = functions.region("asia-southeast2").https.onCall
       throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
 
-    const fireStoreNotifications = await db.notifications.where("userId", "==", uid).orderBy("updatedTime").get();
+    const fireStoreNotifications = await db.notifications.where("userId", "==", uid).orderBy("updatedTime", 'desc').get();
     const notifications: Notification[] = [];
 
     await Promise.all(fireStoreNotifications.docs.map( async (notiDoc) => {
