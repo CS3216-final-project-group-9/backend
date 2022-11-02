@@ -4,6 +4,7 @@ import {getAuth} from "firebase-admin/auth";
 import momentTimezone = require("moment-timezone");
 import AWS = require("aws-sdk");
 import functions = require("firebase-functions");
+import {parseLocation} from "./enum-parse";
 
 const config = functions.config();
 
@@ -67,8 +68,8 @@ export function notifyPosterHasNewApplicant(post: Post) {
 }
 
 export function notifyParticipantHostAccepted(post: Post, participant: User) {
-  const postDate = momentTimezone(post.startDateTime).format("MMM D");
-  const postLocation = post.location;
+  const postDate = momentTimezone(post.startDateTime).format("dddd, MMMM Do, h:mm a");
+  const postLocation = parseLocation(post.location);
   const poster = post.poster.name;
   const subject = "Your study session is confirmed!";
   const title = "";
@@ -78,8 +79,8 @@ export function notifyParticipantHostAccepted(post: Post, participant: User) {
 
 
 export function notifyPosterApplicantCancelled(post: Post) {
-  const postDate = momentTimezone(post.startDateTime).format("MMM D");
-  const postLocation = post.location;
+  const postDate = momentTimezone(post.startDateTime).format("dddd, MMMM Do, h:mm a");
+  const postLocation = parseLocation(post.location);
   const subject = "Applicant has cancelled!";
   const title = "An applicant has cancelled!";
   const message = `An applicant has cancelled a study session with you scheduled for ${postDate} at ${postLocation}`;
@@ -87,8 +88,8 @@ export function notifyPosterApplicantCancelled(post: Post) {
 }
 
 export function notifyParticipantHostCancelled(post: Post, participant: User) {
-  const postDate = momentTimezone(post.startDateTime).format("MMM D");
-  const postLocation = post.location;
+  const postDate = momentTimezone(post.startDateTime).format("dddd, MMMM Do, h:mm a");
+  const postLocation = parseLocation(post.location);
   const subject = "Study session cancelled!";
   const title = "Your study session is cancelled!";
   const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
@@ -96,9 +97,9 @@ export function notifyParticipantHostCancelled(post: Post, participant: User) {
 }
 
 export function notifyParticipantsHostCancelled(post: Post, applicants: User[]) {
-  const postDate = momentTimezone(post.startDateTime).format("MMM D");
+  const postDate = momentTimezone(post.startDateTime).format("dddd, MMMM Do, h:mm a");
   const users = post.participants;
-  const postLocation = post.location;
+  const postLocation = parseLocation(post.location);
   const promises = [];
   for (const user of users) {
     const subject = "Study session cancelled!";
