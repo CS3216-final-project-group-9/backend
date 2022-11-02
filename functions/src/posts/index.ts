@@ -168,15 +168,18 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
   try {
     const {page: pageRaw, filter: filterRaw} = data;
     const page = pageRaw ? pageRaw as number: null;
-    const filter = filterRaw as PostsFilter;
+    let filter = filterRaw as PostsFilter;
 
     if (!page) {
       throw new functions.https
           .HttpsError("invalid-argument", CustomErrorCode.PAGE_INPUT_NOT_FOUND);
     }
     if (!filter) {
-      throw new functions.https
-          .HttpsError("invalid-argument", CustomErrorCode.FILTER_INPUT_NOT_FOUND);
+      filter = {
+        days: [],
+        timesOfDay: [],
+        locations: [],
+      };
     }
 
     const uid = context.auth?.uid;
