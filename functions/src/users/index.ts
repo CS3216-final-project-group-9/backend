@@ -49,7 +49,7 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
     newUser.profilePhoto = urlDefaultCover;
     const firebaseUser = parseUserToFirestore(newUser);
     await db.users.doc(uid).create(firebaseUser);
-    const promises = [createNewCampaign(uid), generateImage(uid, AIImageTrigger.SIGNED_UP, uid)];
+    const promises = [generateImage(uid, AIImageTrigger.SIGNED_UP, uid)];
     await Promise.all(promises);
     return {success: true, message: String("New user created successfully")};
   } catch (e) {
