@@ -17,7 +17,6 @@ import {
 } from "./firestorePost";
 import * as CustomErrorCode from "../utils/errorCode";
 import {getAppliedPostsFromFirestore, getCreatedPostsFromFirestore} from "./getCustomPost";
-import {updateCampaignForDeletedApplication, updateCampaignForSession, updateCampaignForSessionDeleted} from "../campaigns";
 import {addDeletePostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
@@ -86,7 +85,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
 
     const parsedPost = parsePostToFirestore(newPost);
     await ref.set(parsedPost);
-    const promises = [updateCampaignForSession(user.id, parsedPost.id), notifyPosterPostCreated(newPost), generateImage(user.id, AIImageTrigger.CREATED_POST, ref.id)];
+    const promises = [notifyPosterPostCreated(newPost), generateImage(user.id, AIImageTrigger.CREATED_POST, ref.id)];
     await Promise.all(promises);
     return {success: true, message: "Post created successfully"};
   } catch (e) {
@@ -144,14 +143,13 @@ export const deletePost = functions.region("asia-southeast2").https.onCall(async
     const applicantDoc = await db.applicants.where("postId", "==", postId).get();
     const applicantMessage = "The study session you applied for has been cancelled";
 
-    const promises: any[] = [updateCampaignForSessionDeleted(uid, firestorePost)];
+    const promises: any[] = [];
     applicantDoc.forEach((doc) => {
       const applicantData = doc.data();
 
       promises.push(getTokensAndSendMessage(applicantData.userId, applicantMessage));
       promises.push(addDeletePostApplicationNotification(post, post.poster.id, applicantData.userId, applicantMessage));
       batch.delete(doc.ref);
-      promises.push(updateCampaignForDeletedApplication(applicantData.userId, applicantData));
     });
     promises.push(batch.commit());
     await Promise.all(promises);

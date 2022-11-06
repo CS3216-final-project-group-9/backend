@@ -7,8 +7,6 @@ import {getPhoto, urlDefaultCover} from "./profilePhoto";
 import {checkUserInfoUnique} from "./checkUserUnique";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
-import {FirestoreCustomCampaign} from "../type/firebase-type";
-import {createCampaign} from "../campaigns";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
 import {getCurrentUserArt, getUserArt} from "../art";
@@ -59,15 +57,15 @@ export const createUser = functions.region("asia-southeast2").https.onCall(async
   }
 });
 
-function createNewCampaign(uid: string) {
-  const campaign: FirestoreCustomCampaign = {
-    id: uid,
-    userId: uid,
-    chances: 1,
-    campaignId: "LAUNCH",
-  } as FirestoreCustomCampaign;
-  return createCampaign(campaign);
-}
+// function createNewCampaign(uid: string) {
+//   const campaign: FirestoreCustomCampaign = {
+//     id: uid,
+//     userId: uid,
+//     chances: 1,
+//     campaignId: "LAUNCH",
+//   } as FirestoreCustomCampaign;
+//   return createCampaign(campaign);
+// }
 
 
 export const hasCreatedUserProfile = functions.region("asia-southeast2").https.onCall(async (data, context) => {

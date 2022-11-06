@@ -8,7 +8,6 @@ import {getPostFromFirestorePost} from "../posts/firestorePost";
 import {HttpsError} from "firebase-functions/v1/https";
 import * as CustomErrorCode from "../utils/errorCode";
 import {addAcceptPostApplicationNotification, addAppliedToPostNotification, addCancelPostApplicationNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
-import {updateCampaignForAcceptedApplication, updateCampaignForApplying, updateCampaignForDeletedApplication} from "../campaigns";
 import {generateImage} from "../texttoimage";
 import {AIImageTrigger} from "../type/ImageTrigger";
 import {getUserArt} from "../art";
@@ -64,7 +63,6 @@ export const createPostApplication = functions.region("asia-southeast2").https.o
     const promises = [
       notifyPosterHasNewApplicant(post),
       notifyApplicantSessionApplied(post, user),
-      updateCampaignForApplying(uid, applicationId),
       getTokensAndSendMessage(post.poster.id, message),
       addAppliedToPostNotification(postId, post.poster.id, uid, message),
       generateImage(uid, AIImageTrigger.APPLIED_POST, applicationId),
@@ -114,7 +112,6 @@ export const deletePostApplication = functions.region("asia-southeast2").https.o
     const posterMessage = applicant.name + " has cancelled their study session application";
 
     const promises = [
-      updateCampaignForDeletedApplication(uid, applicationData),
       notifyPosterApplicantCancelled(post),
       getTokensAndSendMessage(post.poster.id, posterMessage),
       addCancelPostApplicationNotification(postId, post.poster.id, uid, posterMessage),
@@ -183,14 +180,12 @@ export const responsePostApplication = functions.region("asia-southeast2").https
       const applicantMessage = "You have been accepted to study session";
       const postDoc = await db.posts.doc(postId).get();
       const postData = postDoc.data();
-      const applicationData = applicationDoc.data();
       if (!postData) {
         return {success: false,
           message: "Unexpected error: Couldnt get applied request"};
       }
       const promises = [
         notifyParticipantHostAccepted(post, participant),
-        updateCampaignForAcceptedApplication(applicantId, uid, applicationId, postId, postData, applicationData),
         getTokensAndSendMessage(applicantId, applicantMessage),
         addAcceptPostApplicationNotification(postId, post.poster.id, applicantId, applicantMessage),
         generateImage(uid, AIImageTrigger.ACCEPTED_POST, applicationId),
