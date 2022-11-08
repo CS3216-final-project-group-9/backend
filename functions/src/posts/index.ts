@@ -189,7 +189,7 @@ export const getExplorePost = functions.region("asia-southeast2").https.onCall(a
       postSnapshot = await db.posts.where("endDateTime", ">=", date).where("location", "in", filter.locations)
           .orderBy("endDateTime").get();
     }
-
+    console.log(192, filter);
     const posts = await (await getExplorePostsFromSnapshot(postSnapshot, uid?? "", filter)).filter((post) => post.poster.id !== uid);
 
     const pagedPosts = paginate(posts, POST_PER_PAGE, page);
