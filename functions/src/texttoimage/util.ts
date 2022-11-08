@@ -10,7 +10,7 @@ import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
 import moment = require("moment");
-import {addReceiveArtNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
+import { addReceiveArtNotification, getTokensAndSendMessage } from "../notifications/createFirestoreNotification";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
   const today = moment().startOf('day');
@@ -116,38 +116,14 @@ function chooseGoodWordOrOther(other: string[]) {
 export const getInputStringForAI = function getAIString() {
   const randomNum = Math.random();
 
-  let tier = Tier.ONE;
-
-  if (randomNum > Tier.THREE) {
-    tier = Tier.THREE;
-  } else if (randomNum > Tier.TWO) {
-    tier = Tier.TWO;
-  }
-
-  let randomStr = '';
-
-  // tier 1
-  // choose 1 random specific object
+  let randomStr = "";
+  
   randomStr += chooseGoodWordOrOther(specificObjects);
 
-  // choose 1 common word
-  randomStr += chooseGoodWordOrOther(commonWords);
+  randomStr += goodWords[Math.floor(Math.random() * goodWords.length)] + ' ';
 
-  // tier 2
-  if (tier >= Tier.TWO) {
-    // choose 1 more common word
-    randomStr += chooseGoodWordOrOther(commonWords);
-  }
-
-  // tier 3
-  if (tier >= Tier.THREE) {
-    // choose 1 more specific object
-    randomStr += chooseGoodWordOrOther(specificObjects);
-  }
-
-  // randomly decide if should add art style
-  if (Math.random() <= artStyleCutProb) {
-    randomStr += styles[Math.floor(Math.random() * styles.length)] + ' ';
+  if (randomNum < artStyleCutProb) {
+    randomStr += styles[Math.floor(Math.random() *  styles.length)]; 
   }
 
   return randomStr;
