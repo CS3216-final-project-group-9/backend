@@ -71,7 +71,7 @@ export const createPost = functions.region("asia-southeast2").https.onCall(async
           .HttpsError("invalid-argument", CustomErrorCode.DESCRIPTION_TOO_LONG);
     }
 
-    const momentNow = moment().subtract(5, 'minute'); //5 minutes buffer for validation check
+    const momentNow = moment().subtract(5, 'minute'); // 5 minutes buffer for validation check
     const momentEnd = moment(newPost.endDateTime);
     const momentStart = moment(newPost.startDateTime);
     if (momentStart.isBefore(momentNow)) {
