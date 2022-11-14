@@ -131,5 +131,5 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
 });
 
 function getDiffTime(endTime: Date, startTime: Date) {
-  return Math.abs(endTime.getTime() - startTime.getTime()) / 3600000;
+  return Math.abs((endTime as any).toDate().getTime() - (startTime as any).toDate().getTime()) / 3600000;
 }
