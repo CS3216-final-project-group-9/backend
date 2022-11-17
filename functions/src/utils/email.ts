@@ -63,7 +63,7 @@ export function notifyApplicantSessionApplied(post: Post, participant: User) {
 export function notifyPosterHasNewApplicant(post: Post) {
   const subject = "New Applicant for your post!";
   const title = "You have a new applicant for your study post!";
-  const message = "Log in to BuddyNUS to accept them!";
+  const message = "Log in to OnTheWay to accept them!";
   return sendEmailToUser(post.poster, subject, title, message);
 }
 
@@ -73,7 +73,7 @@ export function notifyParticipantHostAccepted(post: Post, participant: User) {
   const poster = post.poster.name;
   const subject = "Your study session is confirmed!";
   const title = "";
-  const message = `Your study session with ${poster} scheduled for ${postDate} at ${postLocation} has been confirmed! Log in to BuddyNUS for more details`;
+  const message = `Your study session with ${poster} scheduled for ${postDate} at ${postLocation} has been confirmed! Log in to OnTheWay for more details`;
   return sendEmailToUser(participant, subject, title, message);
 }
 
