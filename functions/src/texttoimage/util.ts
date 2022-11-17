@@ -5,12 +5,11 @@ import os = require("os");
 import fs = require('fs');
 import {animals} from "./ai_words/animals";
 import {colors} from "./ai_words/colors";
-import {commonWords} from "./ai_words/common_words";
 import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
 import moment = require("moment");
-import { addReceiveArtNotification, getTokensAndSendMessage } from "../notifications/createFirestoreNotification";
+import {addReceiveArtNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
   const today = moment().startOf('day');
@@ -99,12 +98,6 @@ export async function notifyUserImageDone(artId:string) {
 
 const specificObjects = animals.concat(colors).concat(pokemon);
 
-enum Tier {
-  ONE = 0,
-  TWO = 0.4,
-  THREE = 0.7,
-}
-
 const artStyleCutProb = 0.2;
 
 function chooseGoodWordOrOther(other: string[]) {
@@ -117,13 +110,13 @@ export const getInputStringForAI = function getAIString() {
   const randomNum = Math.random();
 
   let randomStr = "";
-  
+
   randomStr += chooseGoodWordOrOther(specificObjects);
 
   randomStr += goodWords[Math.floor(Math.random() * goodWords.length)] + ' ';
 
   if (randomNum < artStyleCutProb) {
-    randomStr += styles[Math.floor(Math.random() *  styles.length)]; 
+    randomStr += styles[Math.floor(Math.random() * styles.length)];
   }
 
   return randomStr;
