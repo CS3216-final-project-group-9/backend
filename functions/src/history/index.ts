@@ -61,8 +61,8 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
     }));
 
     const sortedPost = firestorePosts.sort((a, b) => {
-      const aDateOfStudy = moment(a.startDateTime);
-      const bDateOfStudy = moment(b.startDateTime);
+      const aDateOfStudy = moment((a.startDateTime as any).toDate());
+      const bDateOfStudy = moment((b.startDateTime as any).toDate());
       return aDateOfStudy.isBefore(bDateOfStudy, "minute") ? -1 : 1;
     });
 

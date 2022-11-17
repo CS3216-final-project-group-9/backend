@@ -10,7 +10,7 @@ import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
 import moment = require("moment");
-import { addReceiveArtNotification, getTokensAndSendMessage } from "../notifications/createFirestoreNotification";
+import {addReceiveArtNotification, getTokensAndSendMessage} from "../notifications/createFirestoreNotification";
 
 export const hasReceivedImageInPastDay = async function hasReceivedImageInPastDay(uid: string) {
   const today = moment().startOf('day');
@@ -117,13 +117,13 @@ export const getInputStringForAI = function getAIString() {
   const randomNum = Math.random();
 
   let randomStr = "";
-  
+
   randomStr += chooseGoodWordOrOther(specificObjects);
 
   randomStr += goodWords[Math.floor(Math.random() * goodWords.length)] + ' ';
 
   if (randomNum < artStyleCutProb) {
-    randomStr += styles[Math.floor(Math.random() *  styles.length)]; 
+    randomStr += styles[Math.floor(Math.random() * styles.length)];
   }
 
   return randomStr;
