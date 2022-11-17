@@ -5,7 +5,6 @@ import os = require("os");
 import fs = require('fs');
 import {animals} from "./ai_words/animals";
 import {colors} from "./ai_words/colors";
-import {commonWords} from "./ai_words/common_words";
 import {pokemon} from "./ai_words/pokemon";
 import {styles} from "./ai_words/styles";
 import {goodWords} from "./ai_words/goodWords";
@@ -98,12 +97,6 @@ export async function notifyUserImageDone(artId:string) {
 }
 
 const specificObjects = animals.concat(colors).concat(pokemon);
-
-enum Tier {
-  ONE = 0,
-  TWO = 0.4,
-  THREE = 0.7,
-}
 
 const artStyleCutProb = 0.2;
 
