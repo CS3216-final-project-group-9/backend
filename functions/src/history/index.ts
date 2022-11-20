@@ -18,8 +18,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
     if (!uid) {
       throw new functions.https.HttpsError("unauthenticated", CustomErrorCode.USER_ID_NOT_AUTH);
     }
-
-    const createdSessionDoc = await db.posts.where("posterId", '==', uid).get();
+    const createdSessionDoc = await db.posts.where("posterId", '==', uid).where('endDateTime', '<=', new Date()).get();
     const appliedSessionDoc = await db.applicants.where("userId", "==", uid).get();
     const firestorePosts: FirestoreCustomPost[] = [];
 
@@ -44,8 +43,14 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       const session = sessionDoc.data();
       if (session.status == AppliedRequestStatus.ACCEPTED) {
         const postDoc = await db.posts.doc(session.postId).get();
-        const post = postDoc.data();
-        if (post) {
+        if (postDoc.exists) {
+          const post = postDoc.data() as FirestoreCustomPost;
+          const endDateTime = (post.endDateTime as any).toDate();
+          console.log(49, endDateTime);
+          const isInFuture = moment().isBefore(endDateTime);
+          if (isInFuture) {
+            return;
+          }
           firestorePosts.push(post);
           studyHours += getDiffTime(post.endDateTime, post.startDateTime);
           uidPeopleMeet.add(post.posterId);
@@ -111,6 +116,9 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       });
     });
 
+    const sortedRecentSessions = recentPosts.sort((a, b) => {
+      return moment(b.endDateTime).diff(a.endDateTime); // most recent first
+    });
 
     const history: UserHistory = {
       totalCreatedStudySessions: createdSessionDoc.size,
@@ -118,7 +126,7 @@ export const getHistory = functions.region("asia-southeast2").https.onCall(async
       numPeopleMet: uidPeopleMeet.size,
       totalStudyHours: studyHours,
       recentBuddies: recentBuddies,
-      recentStudySessions: recentPosts,
+      recentStudySessions: sortedRecentSessions,
     };
 
 
