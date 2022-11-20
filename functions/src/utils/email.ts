@@ -237,7 +237,7 @@ function getEmailTemplate(username: string, title: string, message: string) {
     <tr>
       <td style="padding-right: 0px;padding-left: 0px;" align="center">
         
-        <img src="https://firebasestorage.googleapis.com/v0/b/cs3216-final-group-9.appspot.com/o/logo.png?alt=media&token=20d6f6f8-48a8-4bb0-b33a-aa38ddd2716f" align="center" border="0" src="images/image-1.png" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 480px;" width="480"/>
+        <img src="https://firebasestorage.googleapis.com/v0/b/cs3216-final-group-9.appspot.com/o/logo.png?alt=media&token=00521d0f-7d4a-4208-bd05-ae934240a61d" align="center" border="0" src="images/image-1.png" alt="" title="" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 480px;" width="480"/>
         
       </td>
     </tr>
