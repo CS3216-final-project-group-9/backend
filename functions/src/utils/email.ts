@@ -22,7 +22,7 @@ const AWS_SES = new AWS.SES(SES_CONFIG);
 function sendEmail(username: string, email: string, subject: string, title: string, message: string) {
   const emailHtml = getEmailTemplate(username, title, message);
   const params = {
-    Source: "BuddyNUS <noreply@buddynus.com>",
+    Source: "OnTheWay <mail@ontheway.social>",
     Destination: {
       ToAddresses: [
         email,
@@ -46,8 +46,8 @@ function sendEmail(username: string, email: string, subject: string, title: stri
 }
 
 export function notifyPosterPostCreated(post: Post) {
-  const subject = "Your study post is now live!";
-  const title = "Your study post is now live!";
+  const subject = "Your study session is now live!";
+  const title = "Your study session is now live!";
   const message = "You will receive emails when others apply to study with you. Simply accept them and telegram details will be shared!";
   return sendEmailToUser(post.poster, subject, title, message);
 }
@@ -61,8 +61,8 @@ export function notifyApplicantSessionApplied(post: Post, participant: User) {
 }
 
 export function notifyPosterHasNewApplicant(post: Post) {
-  const subject = "New Applicant for your post!";
-  const title = "You have a new applicant for your study post!";
+  const subject = "New Applicant for your session!";
+  const title = "You have a new applicant for your study session!";
   const message = "Log in to OnTheWay to accept them!";
   return sendEmailToUser(post.poster, subject, title, message);
 }
@@ -92,7 +92,7 @@ export function notifyParticipantHostCancelled(post: Post, participant: User) {
   const postLocation = parseLocation(post.location);
   const subject = "Study session cancelled!";
   const title = "Your study session is cancelled!";
-  const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
+  const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the session`;
   return sendEmailToUser(participant, subject, title, message);
 }
 
@@ -104,13 +104,13 @@ export function notifyParticipantsHostCancelled(post: Post, applicants: User[]) 
   for (const user of users) {
     const subject = "Study session cancelled!";
     const title = "Your study session cancelled!";
-    const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
+    const message = `Your upcoming study session, scheduled for ${postDate} at ${postLocation} has been cancelled by the creator of the session`;
     promises.push(sendEmailToUser(user, subject, title, message));
   }
   for (const user of applicants) {
     const subject = "Study session cancelled!";
     const title = "Your study session is cancelled!";
-    const message = `The study session you have applied for on ${postDate} at ${postLocation} has been cancelled by the creator of the post`;
+    const message = `The study session you have applied for on ${postDate} at ${postLocation} has been cancelled by the creator of the session`;
     promises.push(sendEmailToUser(user, subject, title, message));
   }
   return Promise.all(promises);
